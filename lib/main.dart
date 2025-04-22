@@ -189,7 +189,12 @@ class _GeneratorPageState extends State<GeneratorPage> {
     List<Widget> pages = [
       Scaffold(
         appBar: AppBar(
-          title: Text('To-do list'),
+          title: Center(
+            child: Text(
+              'To-do list',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
           actions: [
             IconButton(
               icon: Icon(Icons.add),
