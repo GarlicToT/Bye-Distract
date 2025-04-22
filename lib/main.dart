@@ -171,14 +171,39 @@ class _GeneratorPageState extends State<GeneratorPage> {
         borderRadius: BorderRadius.circular(12),
       ),
       padding: EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(task.title,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          Spacer(),
-          Text(task.mode,
-              style: TextStyle(fontSize: 12, color: Colors.white70)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(task.title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Spacer(),
+              Text(task.mode,
+                  style: TextStyle(fontSize: 12, color: Colors.white70)),
+            ],
+          ),
+          IconButton(
+            icon: Icon(Icons.play_arrow),
+            onPressed: () {
+              // navigate to a new page (placeholder for now)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    appBar: AppBar(
+                      title: Text('Task Page'),
+                      leading: BackButton(), // this shows the back arrow
+                    ),
+                    body: Center(
+                      child: Text('This is the new page'),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -189,12 +214,8 @@ class _GeneratorPageState extends State<GeneratorPage> {
     List<Widget> pages = [
       Scaffold(
         appBar: AppBar(
-          title: Center(
-            child: Text(
-              'To-do list',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
+          centerTitle: true,
+          title: Text('To-do list'),
           actions: [
             IconButton(
               icon: Icon(Icons.add),
@@ -222,12 +243,13 @@ class _GeneratorPageState extends State<GeneratorPage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'To-do List'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart), label: 'Statistics'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Study Room'),
+              icon: Icon(Icons.pie_chart), label: 'Statistics'),
+          BottomNavigationBarItem(icon: Icon(Icons.house), label: 'Study Room'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
         ],
       ),
