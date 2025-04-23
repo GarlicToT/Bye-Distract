@@ -227,8 +227,9 @@ class _GeneratorPageState extends State<GeneratorPage> {
           padding: const EdgeInsets.all(10.0),
           child: GridView.count(
             crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
+            childAspectRatio: 1.8,
             children: tasks.map((task) => buildTaskCard(task)).toList(),
           ),
         ),
