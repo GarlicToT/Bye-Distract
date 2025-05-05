@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 void main() => runApp(MyApp());
 
@@ -17,7 +18,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'To-do List',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primaryColor: Color(0xFFAED3EA),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color(0xFFAED3EA),
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
       home: GeneratorPage(),
     );
   }
@@ -29,7 +43,11 @@ class GeneratorPage extends StatefulWidget {
 }
 
 class _GeneratorPageState extends State<GeneratorPage> {
-  List<Task> tasks = [];
+  List<Task> tasks = [
+    Task(title: 'IELTS Speaking', mode: 'count down', countdownTime: 30),
+    Task(title: 'IELTS Listening', mode: 'count down', countdownTime: 45),
+    Task(title: 'IELTS Reading', mode: 'count up'),
+  ];
   int _selectedIndex = 0;
 
   void _showAddTaskModal() {
@@ -165,46 +183,68 @@ class _GeneratorPageState extends State<GeneratorPage> {
   }
 
   Widget buildTaskCard(Task task) {
+    // 根据任务类型返回固定颜色
+    Color getTaskColor() {
+      switch(task.title.toLowerCase()) {
+        case 'ielts speaking':
+          return Color(0xFFAED3EA); // 浅蓝色
+        case 'ielts listening':
+          return Color(0xFFBFDDBE); // 浅绿色
+        case 'ielts reading':
+          return Color(0xFFFFD6D6); // 浅粉色
+        default:
+          return Color(0xFFAED3EA); // 默认浅蓝色
+      }
+    }
+
     return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       decoration: BoxDecoration(
-        color: getRandomColor(),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: EdgeInsets.all(12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(task.title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Spacer(),
-              Text(task.mode,
-                  style: TextStyle(fontSize: 12, color: Colors.white70)),
-            ],
-          ),
-          IconButton(
-            icon: Icon(Icons.play_arrow),
-            onPressed: () {
-              // navigate to a new page (placeholder for now)
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(
-                      title: Text('Task Page'),
-                      leading: BackButton(), // this shows the back arrow
-                    ),
-                    body: Center(
-                      child: Text('This is the new page'),
-                    ),
-                  ),
-                ),
-              );
-            },
+        color: getTaskColor(),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
         ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    task.title.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    task.mode,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.play_arrow,
+              color: Colors.white,
+              size: 24,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -214,29 +254,21 @@ class _GeneratorPageState extends State<GeneratorPage> {
     List<Widget> pages = [
       Scaffold(
         appBar: AppBar(
-          centerTitle: true,
           title: Text('To-do list'),
           actions: [
             IconButton(
-              icon: Icon(Icons.add),
+              icon: Icon(Icons.add, color: Colors.black),
               onPressed: _showAddTaskModal,
             )
           ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-            childAspectRatio: 1.8,
-            children: tasks.map((task) => buildTaskCard(task)).toList(),
-          ),
+        body: ListView(
+          children: tasks.map((task) => buildTaskCard(task)).toList(),
         ),
       ),
-      Center(child: Text('Statistics')),
-      Center(child: Text('Study Room')),
-      Center(child: Text('Me')),
+      StatisticsPage(),
+      StudyRoomPage(),
+      ProfilePage(),
     ];
 
     return Scaffold(
@@ -245,14 +277,543 @@ class _GeneratorPageState extends State<GeneratorPage> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        elevation: 8,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'To-do List'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.pie_chart), label: 'Statistics'),
-          BottomNavigationBarItem(icon: Icon(Icons.house), label: 'Study Room'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
+            icon: Icon(Icons.format_list_bulleted),
+            label: 'To-do List',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.access_time),
+            label: 'Statistics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.meeting_room),
+            label: 'Study Room',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Me',
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class StatisticsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings, color: Colors.black),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Icon(Icons.emoji_events_outlined, color: Colors.black),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Icon(Icons.edit_outlined, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          _buildTotalCard(),
+          SizedBox(height: 16),
+          _buildTodayCard(),
+          SizedBox(height: 16),
+          _buildDistributionCard(),
+          SizedBox(height: 16),
+          _buildTimePeriodCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Total',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildTotalItem('frequency', '25'),
+              _buildTotalItem('duration', '11 h 37 min'),
+              _buildTotalItem('Average daily\nduration', '1 h 17 min'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.black54,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTodayCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Today',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildTotalItem('frequency', '3'),
+              _buildTotalItem('duration', '150 min'),
+              _buildTotalItem('give up', '0'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistributionCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Distribution',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    '2025-04-03',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.chevron_left, color: Colors.black54),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.chevron_right, color: Colors.black54),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: PieChart(
+              PieChartData(
+                sections: [
+                  PieChartSectionData(
+                    color: Color(0xFFFFD6D6),
+                    value: 70,
+                    title: 'READING\n70 min',
+                    radius: 80,
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    color: Color(0xFFBFDDBE),
+                    value: 50,
+                    title: 'LISTENING\n50 min',
+                    radius: 80,
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    color: Color(0xFFAED3EA),
+                    value: 30,
+                    title: 'WORDS\n30 min',
+                    radius: 80,
+                    titleStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+                sectionsSpace: 0,
+                centerSpaceRadius: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimePeriodCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Time period distribution',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    '2025-04-03',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.chevron_left, color: Colors.black54),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.chevron_right, color: Colors.black54),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: Center(
+              child: Text(
+                '时间段分布图表将在这里显示',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class StudyRoomPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          'Study Room',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: Color(0xFFAED3EA),
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildCircularButton(
+              icon: Icons.add,
+              label: 'Create Room',
+              color: Color(0xFFFFD6D6),
+              onTap: () {
+                // TODO: 实现创建房间功能
+              },
+            ),
+            SizedBox(height: 40),
+            _buildCircularButton(
+              icon: Icons.home,
+              label: 'Join Room',
+              color: Color(0xFFAED3EA),
+              onTap: () {
+                // TODO: 实现加入房间功能
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircularButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings, color: Colors.black),
+            onPressed: () {
+              // TODO: 实现设置功能
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          SizedBox(height: 20),
+          // 头像部分
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[200],
+                  ),
+                  child: Icon(
+                    Icons.image,
+                    color: Colors.grey[400],
+                    size: 40,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Tata',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 40),
+          // 选项卡部分
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                _buildOptionCard(
+                  icon: Icons.person,
+                  title: 'Profile',
+                  color: Color(0xFFFFE6E6),
+                  onTap: () {
+                    // TODO: 实现个人资料功能
+                  },
+                ),
+                SizedBox(height: 16),
+                _buildOptionCard(
+                  icon: Icons.check_circle,
+                  title: 'Whitelist',
+                  color: Color(0xFFBFDDBE),
+                  onTap: () {
+                    // TODO: 实现白名单功能
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionCard({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.black87, size: 24),
+            SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
