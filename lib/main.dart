@@ -4,6 +4,7 @@ import 'pages/todo_list_page.dart';
 import 'pages/statistics_page.dart';
 import 'pages/study_room_page.dart';
 import 'pages/profile_page.dart';
+import 'pages/login_page.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -26,7 +27,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: GeneratorPage(),
+      // home: GeneratorPage(),
+      home: LoginPage(),
     );
   }
 }

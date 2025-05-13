@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import 'dart:async';
 
 class TodoListPage extends StatefulWidget {
   final List<Task> tasks;
@@ -16,6 +17,44 @@ class TodoListPage extends StatefulWidget {
 }
 
 class _TodoListPageState extends State<TodoListPage> {
+  Timer? _timer;
+  int _remainingSeconds = 0;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown(Task task) {
+    if (task.mode == 'count down' && task.countdownTime != null) {
+      setState(() {
+        task.isRunning = true;
+        _remainingSeconds = task.countdownTime! * 60;
+      });
+
+      _timer?.cancel();
+      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        setState(() {
+          if (_remainingSeconds > 0) {
+            _remainingSeconds--;
+          } else {
+            task.isRunning = false;
+            timer.cancel();
+          }
+        });
+      });
+    }
+  }
+
+  void _stopCountdown(Task task) {
+    setState(() {
+      task.isRunning = false;
+      _remainingSeconds = 0;
+    });
+    _timer?.cancel();
+  }
+
   void _showAddTaskModal() {
     String title = '';
     String mode = 'count down';
@@ -134,49 +173,74 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   Widget _buildTaskCard(Task task) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      decoration: BoxDecoration(
-        color: _getTaskColor(task),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    task.title.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    task.mode,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
+    return GestureDetector(
+      onTap: () {
+        if (task.mode == 'count down') {
+          if (task.isRunning) {
+            _stopCountdown(task);
+          } else {
+            _startCountdown(task);
+          }
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        decoration: BoxDecoration(
+          color: _getTaskColor(task),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: Offset(0, 2),
             ),
-            Icon(Icons.play_arrow, color: Colors.white, size: 24),
           ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      task.title.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    if (task.isRunning && task.mode == 'count down')
+                      Text(
+                        '${(_remainingSeconds ~/ 60).toString().padLeft(2, '0')}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      )
+                    else
+                      Text(
+                        task.mode,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Icon(
+                task.isRunning ? Icons.pause : Icons.play_arrow,
+                color: Colors.white,
+                size: 24,
+              ),
+            ],
+          ),
         ),
       ),
     );
