@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../main.dart'; // 用于跳转到主页面
 import 'register_page.dart'; // 新增
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -10,13 +13,87 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
 
-  void _login() {
-    // 这里可以加登录校验逻辑
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => GeneratorPage()),
-    );
+  Future<void> _saveUserInfo(int userId, String userName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_id', userId);
+    await prefs.setString('user_name', userName);
+  }
+
+  Future<void> _login() async {
+    // 验证输入
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('请填写所有必填字段')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.252.89.79:8001/users/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': emailController.text,
+          'password': passwordController.text,
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['user_id'] != null) {
+        // 登录成功
+        await _saveUserInfo(responseData['user_id'], responseData['user_name']);
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // 跳转到主页面
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => GeneratorPage()),
+        );
+      } else {
+        // 登录失败
+        setState(() {
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['detail'] ?? '登录失败，请检查邮箱和密码'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('网络错误，请检查网络连接'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _register() {
@@ -94,8 +171,17 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.check, size: 36),
-                    onPressed: _login,
+                    icon: _isLoading 
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                          ),
+                        )
+                      : Icon(Icons.check, size: 36),
+                    onPressed: _isLoading ? null : _login,
                   ),
                 ],
               ),
