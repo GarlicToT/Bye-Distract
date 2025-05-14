@@ -1,7 +1,8 @@
 import 'dart:async';
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
 
 class TodoListPage extends StatefulWidget {
@@ -21,6 +22,42 @@ class TodoListPage extends StatefulWidget {
 class _TodoListPageState extends State<TodoListPage> {
   Timer? _timer;
   int _remainingSeconds = 0;
+  final String baseUrl = 'http://10.252.89.79:8001/tasks/add'; // 请替换为实际的API地址
+
+  Future<void> _addTaskToServer(String title, String mode, int? countdownTime) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
+      
+      final requestBody = {
+        'user_id': userId,
+        'expected_mode': mode == 'count down' ? 0 : 1,
+        'title': title,
+        'time': mode == 'count down' ? (countdownTime ?? 0) * 60 : 0,
+      };
+      
+      print('发送请求到: $baseUrl');
+      print('请求体: ${jsonEncode(requestBody)}');
+      
+      final response = await http.post(
+        Uri.parse(baseUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print('响应状态码: ${response.statusCode}');
+      print('响应体: ${response.body}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to add task');
+      }
+    } catch (e) {
+      // 在实际应用中，你可能想要显示一个错误提示
+      print('Error adding task: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -94,15 +131,26 @@ class _TodoListPageState extends State<TodoListPage> {
                         ),
                         GestureDetector(
                           child: Icon(Icons.check),
-                          onTap: () {
+                          onTap: () async {
                             if (title.trim().isNotEmpty) {
-                              widget.onAddTask(Task(
+                              final task = Task(
                                 title: title,
                                 mode: mode,
                                 countdownTime: mode == 'count down'
                                     ? countdownTime.toInt()
                                     : null,
-                              ));
+                              );
+                              
+                              // 先添加到本地
+                              widget.onAddTask(task);
+                              
+                              // 发送到服务器
+                              await _addTaskToServer(
+                                title,
+                                mode,
+                                mode == 'count down' ? countdownTime.toInt() : null,
+                              );
+                              
                               Navigator.pop(context);
                             }
                           },
