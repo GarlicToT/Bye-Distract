@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
     // 验证输入
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请填写所有必填字段')),
+        SnackBar(content: Text('Please fill in all the required fields')),
       );
       return;
     }
@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(responseData['detail'] ?? '登录失败，请检查邮箱和密码'),
+            content: Text(responseData['detail'] ?? 'Login failed. Please check your email and password'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ),
