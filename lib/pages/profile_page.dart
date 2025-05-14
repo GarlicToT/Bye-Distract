@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -20,6 +21,20 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _userName = prefs.getString('user_name') ?? 'User';
     });
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    // 清除保存的用户信息
+    await prefs.remove('user_name');
+    await prefs.remove('user_id');
+    
+    // 返回登录页面
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (route) => false, // 清除所有路由历史
+    );
   }
 
   @override
@@ -80,6 +95,13 @@ class _ProfilePageState extends State<ProfilePage> {
           title: 'Whitelist',
           color: Color(0xFFBFDDBE),
         ),
+        SizedBox(height: 16),
+        _buildOptionCard(
+          icon: Icons.logout,
+          title: 'Log out',
+          color: Color(0xFFFFE0B2), // 使用暖色调，与现有配色方案相协调
+          onTap: _logout,
+        ),
       ],
     ),
   );
@@ -88,26 +110,30 @@ class _ProfilePageState extends State<ProfilePage> {
     required IconData icon,
     required String title,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.black87, size: 24),
-          SizedBox(width: 12),
-          Text(title, style: _optionTitleStyle),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.black87, size: 24),
+            SizedBox(width: 12),
+            Text(title, style: _optionTitleStyle),
+          ],
+        ),
       ),
     );
   }
