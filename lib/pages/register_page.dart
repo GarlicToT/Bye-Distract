@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -9,10 +12,131 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
 
-  void _register() {
-    // 这里可以添加注册逻辑
-    Navigator.pop(context); // 注册后返回登录页
+  Future<void> _saveUserId(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_id', userId);
+  }
+
+  Future<void> _register() async {
+    // 验证输入
+    if (usernameController.text.isEmpty || 
+        emailController.text.isEmpty || 
+        passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('请填写所有必填字段')),
+      );
+      return;
+    }
+
+    // 验证邮箱格式
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(emailController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('请输入有效的邮箱地址')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.252.89.79:8001/users/register'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'user_name': usernameController.text,
+          'email': emailController.text,
+          'password': passwordController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // 解析响应数据
+        final responseData = jsonDecode(response.body);
+        if (responseData != null && responseData['user_id'] != null) {
+          // 保存用户ID
+          await _saveUserId(responseData['user_id']);
+          
+          setState(() {
+            _isLoading = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('注册成功！'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('注册成功，但未获取到用户ID'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else if (response.statusCode == 422) {
+        // 格式错误
+        final errorData = jsonDecode(response.body);
+        String errorMessage = '注册失败：';
+        
+        if (errorData is Map<String, dynamic>) {
+          if (errorData.containsKey('detail')) {
+            if (errorData['detail'] is List) {
+              errorMessage += errorData['detail'][0]['msg'];
+            } else {
+              errorMessage += errorData['detail'].toString();
+            }
+          }
+        }
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        // 其他错误
+        setState(() {
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('服务器错误，请稍后重试'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('网络错误，请检查网络连接'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -92,13 +216,22 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.arrow_back, size: 32),
-                    onPressed: () {
+                    onPressed: _isLoading ? null : () {
                       Navigator.pop(context);
                     },
                   ),
                   IconButton(
-                    icon: Icon(Icons.check, size: 36),
-                    onPressed: _register,
+                    icon: _isLoading 
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                          ),
+                        )
+                      : Icon(Icons.check, size: 36),
+                    onPressed: _isLoading ? null : _register,
                   ),
                 ],
               ),
