@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
-import '../models/task.dart';
 import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../models/task.dart';
 
 class TodoListPage extends StatefulWidget {
   final List<Task> tasks;
@@ -123,7 +125,8 @@ class _TodoListPageState extends State<TodoListPage> {
                                 ? Colors.blue
                                 : Colors.grey[300],
                           ),
-                          onPressed: () => setModalState(() => mode = 'count down'),
+                          onPressed: () =>
+                              setModalState(() => mode = 'count down'),
                           child: Text('count down'),
                         ),
                         ElevatedButton(
@@ -132,7 +135,8 @@ class _TodoListPageState extends State<TodoListPage> {
                                 ? Colors.blue
                                 : Colors.grey[300],
                           ),
-                          onPressed: () => setModalState(() => mode = 'count up'),
+                          onPressed: () =>
+                              setModalState(() => mode = 'count up'),
                           child: Text('count up'),
                         ),
                       ],
@@ -146,7 +150,8 @@ class _TodoListPageState extends State<TodoListPage> {
                         value: countdownTime,
                         divisions: 11,
                         label: '${countdownTime.toInt()} min',
-                        onChanged: (val) => setModalState(() => countdownTime = val),
+                        onChanged: (val) =>
+                            setModalState(() => countdownTime = val),
                       ),
                     ]
                   ],
@@ -208,7 +213,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     Text(
                       task.title.toUpperCase(),
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
@@ -227,7 +232,7 @@ class _TodoListPageState extends State<TodoListPage> {
                       Text(
                         task.mode,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: Colors.white.withOpacity(0.8),
                         ),
                       ),
@@ -258,8 +263,15 @@ class _TodoListPageState extends State<TodoListPage> {
           )
         ],
       ),
-      body: ListView(
-        children: widget.tasks.map(_buildTaskCard).toList(),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 10,
+          childAspectRatio: 2 / 1,
+          children: widget.tasks.map(_buildTaskCard).toList(),
+        ),
       ),
     );
   }
