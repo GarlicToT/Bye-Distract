@@ -18,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _saveUserInfo(int userId, String userName) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_id', userId);
+    print('Saved userId: $userId');
     await prefs.setString('user_name', userName);
   }
 

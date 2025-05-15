@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'create_study_room.dart';
+// import 'create_study_room.dart'; // create_study_room will be handled by parent
 
 class StudyRoomPage extends StatelessWidget {
+  final VoidCallback onCreateRoom; // Add this callback
+
+  StudyRoomPage({Key? key, required this.onCreateRoom}) : super(key: key); // Modify constructor, remove const
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,10 +22,7 @@ class StudyRoomPage extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateStudyRoomPage()),
-                );
+                onCreateRoom();
               },
               child: _buildCircularButton(
                 icon: Icons.add,

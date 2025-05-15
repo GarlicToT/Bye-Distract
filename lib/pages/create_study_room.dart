@@ -5,6 +5,15 @@ import 'dart:convert';
 import 'study_room_detail_page.dart';
 
 class CreateStudyRoomPage extends StatefulWidget {
+  final VoidCallback onCancel;
+  final Function(String roomId, String roomName, String roomDescription) onRoomCreatedAndNavToDetail;
+
+  const CreateStudyRoomPage({
+    Key? key,
+    required this.onCancel,
+    required this.onRoomCreatedAndNavToDetail,
+  }) : super(key: key);
+
   @override
   State<CreateStudyRoomPage> createState() => _CreateStudyRoomPageState();
 }
@@ -21,7 +30,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
     final roomDesc = _roomDescController.text.trim();
     if (roomName.isEmpty || roomDesc.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Room name 和 Room description 不能为空')),
+        SnackBar(content: Text('Room name and Room description can not be empty.')),
       );
       return;
     }
@@ -38,23 +47,29 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
         headers: {'Content-Type': 'application/json'},
         body: body,
       );
-      setState(() { _isLoading = false; });
+      
       if (response.statusCode == 200 || response.statusCode == 201) {
-        _showSuccessDialog();
+        final responseData = jsonDecode(response.body);
+        final roomId = responseData['room_id'].toString();
+        final fetchedRoomName = responseData['room_name'] as String;
+        final fetchedRoomDescription = responseData['room_description'] as String;
+        setState(() { _isLoading = false; });
+        _showSuccessDialog(roomId, fetchedRoomName, fetchedRoomDescription);
       } else {
+        setState(() { _isLoading = false; });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('创建失败: ${response.body}')),
+          SnackBar(content: Text('Creation failed: ${response.body}')),
         );
       }
     } catch (e) {
       setState(() { _isLoading = false; });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('网络错误: $e')),
+        SnackBar(content: Text('Network error: $e')),
       );
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(String roomId, String roomName, String roomDescription) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -82,9 +97,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
-                    );
+                    widget.onRoomCreatedAndNavToDetail(roomId, roomName, roomDescription);
                   },
                   child: Container(
                     width: double.infinity,
@@ -224,7 +237,6 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                     ),
                   ),
                 ),
-                Spacer(),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
                   child: Row(
@@ -232,7 +244,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pop();
+                          widget.onCancel();
                         },
                         child: Text(
                           'cancel',
@@ -248,16 +260,17 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                         child: Text(
                           'Create',
                           style: TextStyle(
+                            color: _isLoading ? Colors.grey : Colors.black87,
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Montserrat',
-                            color: _isLoading ? Colors.grey : Colors.black,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                SizedBox(height: 32),
               ],
             ),
             if (_isLoading)

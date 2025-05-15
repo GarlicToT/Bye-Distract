@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 
 class StudyRoomDetailPage extends StatelessWidget {
+  final String roomId;
+  final String roomName;
+  final String roomDescription;
+
+  const StudyRoomDetailPage({
+    Key? key,
+    required this.roomId,
+    required this.roomName,
+    required this.roomDescription,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +62,7 @@ class StudyRoomDetailPage extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              'Beta',
+                              roomName,
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -78,7 +89,7 @@ class StudyRoomDetailPage extends StatelessWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          '(Room Code: 123456)',
+                          '(Room ID: $roomId)',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -87,7 +98,7 @@ class StudyRoomDetailPage extends StatelessWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Fighting',
+                          roomDescription,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w400,

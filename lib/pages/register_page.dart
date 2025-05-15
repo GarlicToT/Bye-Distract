@@ -69,7 +69,7 @@ class _RegisterPageState extends State<RegisterPage> {
           
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('注册成功！'),
+              content: Text('Registration successful!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -81,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
           
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('注册成功，但未获取到用户ID'),
+              content: Text('The registration was successful, but the user ID was not obtained'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -89,7 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
       } else if (response.statusCode == 422) {
         // 格式错误
         final errorData = jsonDecode(response.body);
-        String errorMessage = '注册失败：';
+        String errorMessage = 'Registration failed:';
         
         if (errorData is Map<String, dynamic>) {
           if (errorData.containsKey('detail')) {
@@ -120,7 +120,7 @@ class _RegisterPageState extends State<RegisterPage> {
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('服务器错误，请稍后重试'),
+            content: Text('Server error. Please try again later'),
             backgroundColor: Colors.red,
           ),
         );
@@ -132,7 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('网络错误，请检查网络连接'),
+          content: Text('Network error. Please check the network connection'),
           backgroundColor: Colors.red,
         ),
       );

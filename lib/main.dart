@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'models/task.dart';
+// import 'models/task.dart';
 import 'pages/todo_list_page.dart';
 import 'pages/statistics_page.dart';
 import 'pages/study_room_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/login_page.dart';
+import 'pages/create_study_room.dart';
+import 'pages/study_room_detail_page.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -46,6 +49,7 @@ class GeneratorPageState extends State<GeneratorPage> {
   // ];
 
   int _selectedIndex = 0;
+  bool _isCreatingStudyRoom = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +70,33 @@ class GeneratorPageState extends State<GeneratorPage> {
       case 1:
         return StatisticsPage();
       case 2:
-        return StudyRoomPage();
+        return _isCreatingStudyRoom
+            ? CreateStudyRoomPage(
+                onCancel: () {
+                  setState(() {
+                    _isCreatingStudyRoom = false;
+                  });
+                },
+                onRoomCreatedAndNavToDetail: (String roomId, String roomName, String roomDescription) {
+                  setState(() {
+                    _isCreatingStudyRoom = false;
+                  });
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => StudyRoomDetailPage(
+                      roomId: roomId,
+                      roomName: roomName,
+                      roomDescription: roomDescription,
+                    )),
+                  );
+                },
+              )
+            : StudyRoomPage(
+                onCreateRoom: () {
+                  setState(() {
+                    _isCreatingStudyRoom = true;
+                  });
+                },
+              );
       case 3:
         return ProfilePage();
       default:
