@@ -124,22 +124,6 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                                         fontFamily: 'Montserrat',
                                       ),
                                     ),
-                                    SizedBox(width: 8),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFFFE4A0),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        '2 persons',
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                                 SizedBox(height: 4),
@@ -166,14 +150,6 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Row(
-                                children: [
-                                  Text('0', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                  SizedBox(width: 4),
-                                  Text('Focusing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black54)),
-                                ],
-                              ),
-                              SizedBox(height: 8),
                               Row(
                                 children: [
                                   Text('1', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
@@ -237,23 +213,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                                     SizedBox(height: 8),
                                     Row(
                                       children: [
-                                        Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFFFFA09A),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text('Focus Streak: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFFD1B3FF),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text('Total Focus: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                        ),
+                                        // Container for 'Focus Streak' and 'Total Focus' are removed.
+                                        // The Row will be empty if these were the only children.
+                                        // If the Row itself is no longer needed, it can also be removed.
+                                        // For now, just removing the children as requested.
                                       ],
                                     ),
                                   ],

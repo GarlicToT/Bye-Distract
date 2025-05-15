@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
+import 'countdown.dart';
+import 'countup.dart';
 
 class TodoListPage extends StatefulWidget {
   const TodoListPage({Key? key}) : super(key: key);
@@ -375,13 +377,24 @@ class _TodoListPageState extends State<TodoListPage> {
     return GestureDetector(
       onTap: () {
         if (task.mode == 'count down') {
-          if (task.isRunning) {
-            _stopCountdown(task);
-          } else {
-            _startCountdown(task);
-          }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CountdownPage(
+                taskTitle: task.title,
+                initialSeconds: (task.countdownTime ?? 0) * 60,
+              ),
+            ),
+          );
         } else if (task.mode == 'count up') {
-          print("Count up task tapped. ID: ${task.taskId}");
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CountupPage(
+                taskTitle: task.title,
+              ),
+            ),
+          );
         }
       },
       onLongPress: () {
