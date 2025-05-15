@@ -393,6 +393,7 @@ class _TodoListPageState extends State<TodoListPage> {
             MaterialPageRoute(
               builder: (context) => CountupPage(
                 taskTitle: task.title,
+                taskId: task.taskId
               ),
             ),
           );
