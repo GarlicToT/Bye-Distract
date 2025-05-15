@@ -6,25 +6,84 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
 
 class TodoListPage extends StatefulWidget {
-  final List<Task> tasks;
-  final Function(Task) onAddTask;
-
-  const TodoListPage({
-    Key? key,
-    required this.tasks,
-    required this.onAddTask,
-  }) : super(key: key);
+  const TodoListPage({Key? key}) : super(key: key);
 
   @override
   _TodoListPageState createState() => _TodoListPageState();
 }
 
 class _TodoListPageState extends State<TodoListPage> {
+  List<Task> _tasks = [];
+  bool _isLoading = true;
+
   Timer? _timer;
   int _remainingSeconds = 0;
-  final String baseUrl = 'http://10.252.89.79:8001/tasks/add'; // 请替换为实际的API地址
+  final String addTaskBaseUrl = 'http://10.252.88.78:8001/tasks/add';
+  final String fetchTasksBaseUrl = 'http://10.252.88.78:8001/tasks';
 
-  Future<void> _addTaskToServer(String title, String mode, int? countdownTime) async {
+  @override
+  void initState() {
+    super.initState();
+    _fetchTasks();
+  }
+
+  Future<void> _fetchTasks() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      if (userId == null) {
+        print('User ID not found, cannot fetch tasks.');
+        setState(() {
+          _isLoading = false;
+          _tasks = [];
+        });
+        return;
+      }
+
+      final response = await http.get(Uri.parse('$fetchTasksBaseUrl/$userId'));
+      
+      print('Fetching tasks from: $fetchTasksBaseUrl/$userId');
+      print('Fetch tasks response status: ${response.statusCode}');
+      print('Fetch tasks response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> tasksJson = jsonDecode(response.body);
+        final List<Task> fetchedTasks = [];
+        for (var taskJson in tasksJson) {
+          if (taskJson['is_finished'] == false && taskJson['given_up'] == false) {
+            fetchedTasks.add(Task(
+              taskId: taskJson['task_id'],
+              title: taskJson['title'],
+              mode: taskJson['expected_mode'] == 0 ? 'count down' : 'count up',
+              countdownTime: taskJson['expected_mode'] == 0 && taskJson['time'] != null 
+                  ? (taskJson['time'] as int) ~/ 60 
+                  : null,
+              isRunning: false,
+            ));
+          }
+        }
+        setState(() {
+          _tasks = fetchedTasks;
+          _isLoading = false;
+        });
+      } else {
+        print('Failed to load tasks: ${response.statusCode}');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching tasks: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _addTaskToServer(String title, String mode, int? countdownTimeInMinutes) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('user_id') ?? 0;
@@ -33,14 +92,14 @@ class _TodoListPageState extends State<TodoListPage> {
         'user_id': userId,
         'expected_mode': mode == 'count down' ? 0 : 1,
         'title': title,
-        'time': mode == 'count down' ? (countdownTime ?? 0) * 60 : 0,
+        'time': mode == 'count down' ? (countdownTimeInMinutes ?? 0) * 60 : 0,
       };
       
-      print('发送请求到: $baseUrl');
+      print('发送请求到: $addTaskBaseUrl');
       print('请求体: ${jsonEncode(requestBody)}');
       
       final response = await http.post(
-        Uri.parse(baseUrl),
+        Uri.parse(addTaskBaseUrl),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -50,12 +109,16 @@ class _TodoListPageState extends State<TodoListPage> {
       print('响应状态码: ${response.statusCode}');
       print('响应体: ${response.body}');
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Failed to add task');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _fetchTasks();
+      } else {
+        throw Exception('Failed to add task. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      // 在实际应用中，你可能想要显示一个错误提示
       print('Error adding task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add task: $e'))
+      );
     }
   }
 
@@ -66,10 +129,17 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   void _startCountdown(Task task) {
-    if (task.mode == 'count down' && task.countdownTime != null) {
+    if (task.mode == 'count down' && task.countdownTime != null && task.countdownTime! > 0) {
+      final taskInList = _tasks.firstWhere((t) => t.taskId == task.taskId, orElse: () => task);
+      
       setState(() {
-        task.isRunning = true;
-        _remainingSeconds = task.countdownTime! * 60;
+        for (var t in _tasks) {
+          if (t.isRunning && t.taskId != taskInList.taskId) {
+            t.isRunning = false;
+          }
+        }
+        taskInList.isRunning = true;
+        _remainingSeconds = taskInList.countdownTime! * 60;
       });
 
       _timer?.cancel();
@@ -78,7 +148,7 @@ class _TodoListPageState extends State<TodoListPage> {
           if (_remainingSeconds > 0) {
             _remainingSeconds--;
           } else {
-            task.isRunning = false;
+            taskInList.isRunning = false;
             timer.cancel();
           }
         });
@@ -87,8 +157,9 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   void _stopCountdown(Task task) {
+    final taskInList = _tasks.firstWhere((t) => t.taskId == task.taskId, orElse: () => task);
     setState(() {
-      task.isRunning = false;
+      taskInList.isRunning = false;
       _remainingSeconds = 0;
     });
     _timer?.cancel();
@@ -97,7 +168,7 @@ class _TodoListPageState extends State<TodoListPage> {
   void _showAddTaskModal() {
     String title = '';
     String mode = 'count down';
-    double countdownTime = 25;
+    double countdownTimeSliderValue = 25;
 
     showModalBottomSheet(
       context: context,
@@ -133,25 +204,17 @@ class _TodoListPageState extends State<TodoListPage> {
                           child: Icon(Icons.check),
                           onTap: () async {
                             if (title.trim().isNotEmpty) {
-                              final task = Task(
-                                title: title,
-                                mode: mode,
-                                countdownTime: mode == 'count down'
-                                    ? countdownTime.toInt()
-                                    : null,
-                              );
-                              
-                              // 先添加到本地
-                              widget.onAddTask(task);
-                              
-                              // 发送到服务器
                               await _addTaskToServer(
-                                title,
+                                title.trim(),
                                 mode,
-                                mode == 'count down' ? countdownTime.toInt() : null,
+                                mode == 'count down' ? countdownTimeSliderValue.toInt() : null,
                               );
                               
                               Navigator.pop(context);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Task title cannot be empty.'))
+                              );
                             }
                           },
                         ),
@@ -161,7 +224,7 @@ class _TodoListPageState extends State<TodoListPage> {
                       decoration: InputDecoration(
                           hintText: 'Enter task title',
                           contentPadding: EdgeInsets.symmetric(horizontal: 8)),
-                      onChanged: (val) => setModalState(() => title = val),
+                      onChanged: (val) => title = val,
                     ),
                     SizedBox(height: 10),
                     Row(
@@ -170,36 +233,36 @@ class _TodoListPageState extends State<TodoListPage> {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: mode == 'count down'
-                                ? Colors.blue
+                                ? Theme.of(context).primaryColor
                                 : Colors.grey[300],
                           ),
                           onPressed: () =>
                               setModalState(() => mode = 'count down'),
-                          child: Text('count down'),
+                          child: Text('count down', style: TextStyle(color: mode == 'count down' ? Colors.white : Colors.black)),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: mode == 'count up'
-                                ? Colors.blue
+                                ? Theme.of(context).primaryColor
                                 : Colors.grey[300],
                           ),
                           onPressed: () =>
                               setModalState(() => mode = 'count up'),
-                          child: Text('count up'),
+                          child: Text('count up', style: TextStyle(color: mode == 'count up' ? Colors.white : Colors.black)),
                         ),
                       ],
                     ),
                     if (mode == 'count down') ...[
                       SizedBox(height: 10),
-                      Text('${countdownTime.toInt()} minutes'),
+                      Text('${countdownTimeSliderValue.toInt()} minutes'),
                       Slider(
                         min: 5,
                         max: 60,
-                        value: countdownTime,
+                        value: countdownTimeSliderValue,
                         divisions: 11,
-                        label: '${countdownTime.toInt()} min',
+                        label: '${countdownTimeSliderValue.toInt()} min',
                         onChanged: (val) =>
-                            setModalState(() => countdownTime = val),
+                            setModalState(() => countdownTimeSliderValue = val),
                       ),
                     ]
                   ],
@@ -213,6 +276,14 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   Color _getTaskColor(Task task) {
+    final colors = [
+      Color(0xFFAED3EA), Color(0xFFBFDDBE), Color(0xFFFFD6D6), 
+      Color(0xFFFFFACD), Color(0xFFE6E6FA), Color(0xFFFFE4E1)
+    ];
+    int taskIndex = _tasks.indexWhere((t) => t.taskId == task.taskId);
+    if (taskIndex != -1) {
+      return colors[taskIndex % colors.length];
+    }
     switch (task.title.toLowerCase()) {
       case 'ielts speaking':
         return Color(0xFFAED3EA);
@@ -221,11 +292,22 @@ class _TodoListPageState extends State<TodoListPage> {
       case 'ielts reading':
         return Color(0xFFFFD6D6);
       default:
-        return Color(0xFFAED3EA);
+        return colors[task.title.hashCode % colors.length];
     }
   }
 
   Widget _buildTaskCard(Task task) {
+    String countDownDisplayTime = '';
+    if (task.mode == 'count down') {
+      if (task.isRunning) {
+        int minutes = _remainingSeconds ~/ 60;
+        int seconds = _remainingSeconds % 60;
+        countDownDisplayTime = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+      } else if (task.countdownTime != null) {
+        countDownDisplayTime = '${task.countdownTime} min';
+      }
+    }
+
     return GestureDetector(
       onTap: () {
         if (task.mode == 'count down') {
@@ -234,10 +316,13 @@ class _TodoListPageState extends State<TodoListPage> {
           } else {
             _startCountdown(task);
           }
+        } else if (task.mode == 'count up') {
+          print("Count up task tapped. ID: ${task.taskId}");
         }
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _getTaskColor(task),
           borderRadius: BorderRadius.circular(15),
@@ -249,51 +334,49 @@ class _TodoListPageState extends State<TodoListPage> {
             ),
           ],
         ),
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      task.title.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  if (task.mode == 'count down' && countDownDisplayTime.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        countDownDisplayTime,
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ),
-                    SizedBox(height: 4),
-                    if (task.isRunning && task.mode == 'count down')
-                      Text(
-                        '${(_remainingSeconds ~/ 60).toString().padLeft(2, '0')}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      )
-                    else
-                      Text(
-                        task.mode,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                      ),
-                  ],
-                ),
+                ],
               ),
-              Icon(
-                task.isRunning ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
-                size: 24,
-              ),
-            ],
-          ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (task.mode == 'count down')
+                  Icon(
+                    task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                    size: 32,
+                    color: Colors.black.withOpacity(0.7),
+                  ),
+                if (task.mode == 'count up')
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 32,
+                    color: Colors.black.withOpacity(0.7),
+                  ),
+              ],
+            )
+          ],
         ),
       ),
     );
@@ -303,24 +386,37 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('To-do list'),
+        title: Text('My Tasks'),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: Colors.black),
+            icon: Icon(Icons.refresh),
+            onPressed: _fetchTasks,
+          ),
+          IconButton(
+            icon: Icon(Icons.add),
             onPressed: _showAddTaskModal,
           )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 2,
-          mainAxisSpacing: 10,
-          childAspectRatio: 2 / 1,
-          children: widget.tasks.map(_buildTaskCard).toList(),
-        ),
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _tasks.isEmpty
+              ? Center(
+                  child: Text(
+                    'No tasks yet. Add one!',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 4,
+                    childAspectRatio: 2 / 1,
+                    children: _tasks.map((task) => _buildTaskCard(task)).toList(),
+                  ),
+                ),
     );
   }
 }

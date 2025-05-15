@@ -39,11 +39,11 @@ class GeneratorPage extends StatefulWidget {
 }
 
 class GeneratorPageState extends State<GeneratorPage> {
-  List<Task> tasks = [
-    Task(title: 'IELTS Speaking', mode: 'count down', countdownTime: 30),
-    Task(title: 'IELTS Listening', mode: 'count down', countdownTime: 45),
-    Task(title: 'IELTS Reading', mode: 'count up'),
-  ];
+  // List<Task> tasks = [
+  //   Task(title: 'IELTS Speaking', mode: 'count down', countdownTime: 30),
+  //   Task(title: 'IELTS Listening', mode: 'count down', countdownTime: 45),
+  //   Task(title: 'IELTS Reading', mode: 'count up'),
+  // ];
 
   int _selectedIndex = 0;
 
@@ -58,10 +58,11 @@ class GeneratorPageState extends State<GeneratorPage> {
   Widget _buildCurrentPage() {
     switch (_selectedIndex) {
       case 0:
-        return TodoListPage(
-          tasks: tasks,
-          onAddTask: (newTask) => setState(() => tasks.add(newTask)),
-        );
+        // return TodoListPage(
+        //   tasks: tasks,
+        //   onAddTask: (newTask) => setState(() => tasks.add(newTask)),
+        // );
+        return TodoListPage(); // TodoListPage 现在自行管理任务
       case 1:
         return StatisticsPage();
       case 2:

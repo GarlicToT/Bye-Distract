@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
         emailController.text.isEmpty || 
         passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请填写所有必填字段')),
+        SnackBar(content: Text('Please fill in all the required fields')),
       );
       return;
     }
@@ -34,7 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(emailController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请输入有效的邮箱地址')),
+        SnackBar(content: Text('Please enter a valid email address')),
       );
       return;
     }
@@ -45,7 +45,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.252.89.79:8001/users/register'),
+        Uri.parse('http://10.252.88.78:8001/users/register'),
         headers: {
           'Content-Type': 'application/json',
         },

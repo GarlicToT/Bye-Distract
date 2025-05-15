@@ -1,10 +1,12 @@
 class Task {
+  final int taskId;
   final String title;
   final String mode;
   final int? countdownTime;
   bool isRunning;  //这是为了倒计时功能，cursor改的
 
   Task({
+    required this.taskId,
     required this.title,
     required this.mode,
     this.countdownTime,
