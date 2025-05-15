@@ -20,6 +20,7 @@ class _TodoListPageState extends State<TodoListPage> {
   int _remainingSeconds = 0;
   final String addTaskBaseUrl = 'http://10.252.88.78:8001/tasks/add';
   final String fetchTasksBaseUrl = 'http://10.252.88.78:8001/tasks';
+  final String deleteTaskBaseUrl = 'http://10.252.88.78:8001/tasks/del';
 
   @override
   void initState() {
@@ -122,6 +123,42 @@ class _TodoListPageState extends State<TodoListPage> {
     }
   }
 
+  Future<void> _deleteTaskFromServer(int taskId) async {
+    try {
+      final requestBody = {'task_id': taskId};
+      print('发送删除请求到: $deleteTaskBaseUrl');
+      print('请求体: ${jsonEncode(requestBody)}');
+
+      final response = await http.post(
+        Uri.parse(deleteTaskBaseUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print('删除响应状态码: ${response.statusCode}');
+      print('删除响应体: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseJson = jsonDecode(response.body);
+        if (responseJson['code'] == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(responseJson['message'] ?? 'delete successful!'))
+          );
+          _fetchTasks();
+        } else {
+          throw Exception('Failed to delete task: ${responseJson['message']}');
+        }
+      } else {
+        throw Exception('Failed to delete task. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error deleting task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete task: $e'))
+      );
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -163,6 +200,33 @@ class _TodoListPageState extends State<TodoListPage> {
       _remainingSeconds = 0;
     });
     _timer?.cancel();
+  }
+
+  void _showDeleteConfirmationDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Task'),
+          content: Text('Are you sure you want to delete the task "${task.title}" ?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteTaskFromServer(task.taskId);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showAddTaskModal() {
@@ -319,6 +383,9 @@ class _TodoListPageState extends State<TodoListPage> {
         } else if (task.mode == 'count up') {
           print("Count up task tapped. ID: ${task.taskId}");
         }
+      },
+      onLongPress: () {
+        _showDeleteConfirmationDialog(task);
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
