@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'create_study_room.dart';
 
 class StudyRoomPage extends StatelessWidget {
   @override
@@ -15,10 +16,18 @@ class StudyRoomPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCircularButton(
-              icon: Icons.add,
-              label: 'Create Room',
-              color: Color(0xFFFFD6D6),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreateStudyRoomPage()),
+                );
+              },
+              child: _buildCircularButton(
+                icon: Icons.add,
+                label: 'Create Room',
+                color: Color(0xFFFFD6D6),
+              ),
             ),
             SizedBox(height: 40),
             _buildCircularButton(
