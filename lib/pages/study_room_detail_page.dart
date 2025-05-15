@@ -1,16 +1,64 @@
 import 'package:flutter/material.dart';
 
-class StudyRoomDetailPage extends StatelessWidget {
+class StudyRoomDetailPage extends StatefulWidget {
   final String roomId;
   final String roomName;
   final String roomDescription;
+  final int initialPageIndex;
 
-  const StudyRoomDetailPage({
+  StudyRoomDetailPage({
     Key? key,
     required this.roomId,
     required this.roomName,
     required this.roomDescription,
+    this.initialPageIndex = 2,
   }) : super(key: key);
+
+  @override
+  State<StudyRoomDetailPage> createState() => _StudyRoomDetailPageState();
+}
+
+class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialPageIndex;
+  }
+
+  Widget _buildBottomNavBar() => BottomNavigationBar(
+    currentIndex: _selectedIndex,
+    selectedItemColor: Colors.blue,
+    unselectedItemColor: Colors.grey,
+    type: BottomNavigationBarType.fixed,
+    backgroundColor: Colors.white,
+    elevation: 8,
+    onTap: (index) {
+      if (index == widget.initialPageIndex) {
+      } else {
+        Navigator.of(context).pop(index);
+      }
+    },
+    items: const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.format_list_bulleted),
+        label: 'To-do List',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.access_time),
+        label: 'Statistics',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.meeting_room),
+        label: 'Study Room',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person_outline),
+        label: 'Me',
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +66,6 @@ class StudyRoomDetailPage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: double.infinity,
@@ -45,173 +92,187 @@ class StudyRoomDetailPage extends StatelessWidget {
                   Positioned(
                     right: 24,
                     top: 0,
-                    child: Icon(Icons.settings, size: 32, color: Colors.black54),
+                    bottom: 0,
+                    child: Center(
+                      child: Icon(Icons.settings, size: 32, color: Colors.black54),
+                    ),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20, top: 24, right: 20),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              roomName,
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Montserrat',
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFFFE4A0),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '2 persons',
-                                style: TextStyle(
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 24, right: 20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      widget.roomName,
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Montserrat',
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFFFE4A0),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '2 persons',
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '(Room ID: ${widget.roomId})',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  widget.roomDescription,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Row(
+                                children: [
+                                  Text('0', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
+                                  SizedBox(width: 4),
+                                  Text('Focusing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black54)),
+                                ],
                               ),
+                              SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Text('1', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
+                                  SizedBox(width: 4),
+                                  Text('Your Rank', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black54)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFFFFE4E1),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          '(Room ID: $roomId)',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Montserrat',
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('1', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                              SizedBox(width: 12),
+                              CircleAvatar(
+                                backgroundColor: Colors.grey[200],
+                                radius: 28,
+                                child: Icon(Icons.image, size: 32, color: Colors.grey),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text('Tata', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                                        Spacer(),
+                                        Icon(Icons.star_border, color: Colors.black54),
+                                      ],
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text('Focused Today: 0 min', style: TextStyle(fontSize: 16)),
+                                    SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Text('0', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87)),
+                                        Text('min', style: TextStyle(fontSize: 16, color: Colors.black54)),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFFFA09A),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text('Focus Streak: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFD1B3FF),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text('Total Focus: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          roomDescription,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'Montserrat',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Row(
-                        children: [
-                          Text('0', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
-                          SizedBox(width: 4),
-                          Text('Focusing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black54)),
-                        ],
                       ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text('1', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
-                          SizedBox(width: 4),
-                          Text('Your Rank', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black54)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFE4E1),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
                     ),
+                    SizedBox(height: 16),
                   ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('1', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 12),
-                      CircleAvatar(
-                        backgroundColor: Colors.grey[200],
-                        radius: 28,
-                        child: Icon(Icons.image, size: 32, color: Colors.grey),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text('Tata', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                                Spacer(),
-                                Icon(Icons.star_border, color: Colors.black54),
-                              ],
-                            ),
-                            SizedBox(height: 2),
-                            Text('Focused Today: 0 min', style: TextStyle(fontSize: 16)),
-                            SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Text('0', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                Text('min', style: TextStyle(fontSize: 16, color: Colors.black54)),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFA09A),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text('Focus Streak: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                ),
-                                SizedBox(width: 8),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFD1B3FF),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text('Total Focus: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 } 

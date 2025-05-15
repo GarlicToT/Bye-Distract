@@ -1,10 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'study_room_detail_page.dart'; // For navigation
 // import 'create_study_room.dart'; // create_study_room will be handled by parent
 
-class StudyRoomPage extends StatelessWidget {
-  final VoidCallback onCreateRoom; // Add this callback
+class StudyRoomPage extends StatefulWidget {
+  final VoidCallback onCreateRoom;
+  // Add a new callback for viewing an existing room, to be handled by GeneratorPage
+  final Function(String roomId, String roomName, String roomDescription) onViewExistingRoom;
 
-  StudyRoomPage({Key? key, required this.onCreateRoom}) : super(key: key); // Modify constructor, remove const
+  const StudyRoomPage({
+    Key? key,
+    required this.onCreateRoom,
+    required this.onViewExistingRoom,
+  }) : super(key: key);
+
+  @override
+  State<StudyRoomPage> createState() => _StudyRoomPageState();
+}
+
+class _StudyRoomPageState extends State<StudyRoomPage> {
+  bool _isLoading = true;
+  bool _hasExistingRoom = false;
+  String? _existingRoomId;
+  String? _existingRoomName;
+  String? _existingRoomDescription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingRoomInfo();
+  }
+
+  Future<void> _loadExistingRoomInfo() async {
+    setState(() { _isLoading = true; });
+    final prefs = await SharedPreferences.getInstance();
+    final roomId = prefs.getString('created_room_id');
+    final roomName = prefs.getString('created_room_name');
+    final roomDescription = prefs.getString('created_room_description');
+
+    if (mounted) {
+      if (roomId != null && roomId.isNotEmpty && roomName != null && roomDescription != null) {
+        setState(() {
+          _hasExistingRoom = true;
+          _existingRoomId = roomId;
+          _existingRoomName = roomName;
+          _existingRoomDescription = roomDescription;
+        });
+      }
+      setState(() { _isLoading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,29 +61,36 @@ class StudyRoomPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: () {
-                onCreateRoom();
-              },
-              child: _buildCircularButton(
-                icon: Icons.add,
-                label: 'Create Room',
-                color: Color(0xFFFFD6D6),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (_hasExistingRoom && _existingRoomId != null && _existingRoomName != null && _existingRoomDescription != null) {
+                        // Call the new callback to notify GeneratorPage
+                        widget.onViewExistingRoom(_existingRoomId!, _existingRoomName!, _existingRoomDescription!);
+                      } else {
+                        widget.onCreateRoom();
+                      }
+                    },
+                    child: _buildCircularButton(
+                      icon: _hasExistingRoom ? Icons.visibility : Icons.add,
+                      label: _hasExistingRoom ? 'View My Room' : 'Create Room',
+                      color: Color(0xFFFFD6D6),
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  _buildCircularButton(
+                    icon: Icons.home,
+                    label: 'Join Room',
+                    color: Color(0xFFAED3EA),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 40),
-            _buildCircularButton(
-              icon: Icons.home,
-              label: 'Join Room',
-              color: Color(0xFFAED3EA),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -70,6 +122,7 @@ class StudyRoomPage extends StatelessWidget {
               SizedBox(height: 8),
               Text(
                 label,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,

@@ -25,6 +25,19 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
 
   Future<void> _createRoom() async {
     final prefs = await SharedPreferences.getInstance();
+    final existingRoomId = prefs.getString('created_room_id');
+
+    if (existingRoomId != null && existingRoomId.isNotEmpty) {
+      if (mounted) { // Check if the widget is still in the tree
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You already have an active study room (ID: $existingRoomId). You cannot create another one.')),
+        );
+      }
+      // Optionally, automatically call onCancel or navigate back
+      // widget.onCancel(); 
+      return;
+    }
+
     final userId = prefs.getInt('user_id') ?? 0;
     final roomName = _roomNameController.text.trim();
     final roomDesc = _roomDescController.text.trim();
@@ -53,6 +66,13 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
         final roomId = responseData['room_id'].toString();
         final fetchedRoomName = responseData['room_name'] as String;
         final fetchedRoomDescription = responseData['room_description'] as String;
+
+        // Save room details to SharedPreferences
+        await prefs.setString('created_room_id', roomId);
+        await prefs.setString('created_room_name', fetchedRoomName);
+        await prefs.setString('created_room_description', fetchedRoomDescription);
+
+        if (!mounted) return; // Check if the widget is still in the tree
         setState(() { _isLoading = false; });
         _showSuccessDialog(roomId, fetchedRoomName, fetchedRoomDescription);
       } else {

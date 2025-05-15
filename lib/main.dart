@@ -77,17 +77,25 @@ class GeneratorPageState extends State<GeneratorPage> {
                     _isCreatingStudyRoom = false;
                   });
                 },
-                onRoomCreatedAndNavToDetail: (String roomId, String roomName, String roomDescription) {
+                onRoomCreatedAndNavToDetail: (String roomId, String roomName, String roomDescription) async {
                   setState(() {
                     _isCreatingStudyRoom = false;
                   });
-                  Navigator.of(context).push(
+                  final selectedIndexFromDetail = await Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => StudyRoomDetailPage(
                       roomId: roomId,
                       roomName: roomName,
                       roomDescription: roomDescription,
+                      initialPageIndex: 2,
                     )),
                   );
+                  if (selectedIndexFromDetail != null && selectedIndexFromDetail is int) {
+                    if (mounted) {
+                      setState(() {
+                        _selectedIndex = selectedIndexFromDetail;
+                      });
+                    }
+                  }
                 },
               )
             : StudyRoomPage(
@@ -95,6 +103,23 @@ class GeneratorPageState extends State<GeneratorPage> {
                   setState(() {
                     _isCreatingStudyRoom = true;
                   });
+                },
+                onViewExistingRoom: (String roomId, String roomName, String roomDescription) async {
+                  final selectedIndexFromDetail = await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => StudyRoomDetailPage(
+                      roomId: roomId,
+                      roomName: roomName,
+                      roomDescription: roomDescription,
+                      initialPageIndex: 2,
+                    )),
+                  );
+                  if (selectedIndexFromDetail != null && selectedIndexFromDetail is int) {
+                    if (mounted) {
+                      setState(() {
+                        _selectedIndex = selectedIndexFromDetail;
+                      });
+                    }
+                  }
                 },
               );
       case 3:
