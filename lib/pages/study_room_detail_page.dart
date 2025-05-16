@@ -90,6 +90,19 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                     ),
                   ),
                   Positioned(
+                    left: 24,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Icon(Icons.arrow_back_ios, size: 28, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  Positioned(
                     right: 24,
                     top: 0,
                     bottom: 0,
