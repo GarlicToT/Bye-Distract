@@ -91,21 +91,6 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
   }
 
   Future<void> _createRoom() async {
-    final prefs = await SharedPreferences.getInstance();
-    final existingRoomId = prefs.getString('created_room_id');
-
-    if (existingRoomId != null && existingRoomId.isNotEmpty) {
-      if (mounted) { // Check if the widget is still in the tree
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You already have an active study room (ID: $existingRoomId). You cannot create another one.')),
-        );
-      }
-      // Optionally, automatically call onCancel or navigate back
-      // widget.onCancel(); 
-      return;
-    }
-
-    final userId = prefs.getInt('user_id') ?? 0;
     final roomName = _roomNameController.text.trim();
     final roomDesc = _roomDescController.text.trim();
     if (roomName.isEmpty || roomDesc.isEmpty) {
@@ -114,18 +99,21 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
       );
       return;
     }
+
     setState(() { _isLoading = true; });
-    final url = ApiConfig.createStudyRoomUrl;
-    final body = jsonEncode({
-      'user_id': userId,
-      'room_name': roomName,
-      'room_description': roomDesc,
-    });
+    
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
+      
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse(ApiConfig.createStudyRoomUrl),
         headers: {'Content-Type': 'application/json'},
-        body: body,
+        body: jsonEncode({
+          'user_id': userId,
+          'room_name': roomName,
+          'room_description': roomDesc,
+        }),
       );
       
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -134,12 +122,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
         final fetchedRoomName = responseData['room_name'] as String;
         final fetchedRoomDescription = responseData['room_description'] as String;
 
-        // Save room details to SharedPreferences
-        await prefs.setString('created_room_id', roomId);
-        await prefs.setString('created_room_name', fetchedRoomName);
-        await prefs.setString('created_room_description', fetchedRoomDescription);
-
-        if (!mounted) return; // Check if the widget is still in the tree
+        if (!mounted) return;
         setState(() { _isLoading = false; });
         _showSuccessDialog(roomId, fetchedRoomName, fetchedRoomDescription);
       } else {
@@ -222,6 +205,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width * 0.05; // 水平内边距为屏幕宽度的5%
+    final verticalSpacing = screenSize.height * 0.02; // 垂直间距为屏幕高度的2%
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -232,7 +219,9 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.only(top: 24, bottom: 24),
+                  padding: EdgeInsets.symmetric(
+                    vertical: screenSize.height * 0.03,
+                  ),
                   decoration: BoxDecoration(
                     color: Color(0xFFAED3EA),
                     borderRadius: BorderRadius.only(
@@ -245,30 +234,30 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                       _existingRoomId != null ? 'My Study Room' : 'Create Study Room',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: screenSize.width * 0.07,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
                 if (_existingRoomId != null) ...[
-                  SizedBox(height: 32),
+                  SizedBox(height: verticalSpacing * 2),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Current Room',
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: screenSize.width * 0.055,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'Montserrat',
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: verticalSpacing),
                         Container(
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(screenSize.width * 0.04),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -286,15 +275,15 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                               Text(
                                 _existingRoomName ?? '',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: screenSize.width * 0.05,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(height: verticalSpacing),
                               Text(
                                 _existingRoomDescription ?? '',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: screenSize.width * 0.04,
                                   color: Colors.black87,
                                 ),
                               ),
@@ -305,20 +294,23 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                     ),
                   ),
                 ] else ...[
-                  SizedBox(height: 32),
+                  SizedBox(height: verticalSpacing * 2),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Text(
                       'Room Name',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: screenSize.width * 0.055,
                         fontWeight: FontWeight.w400,
                         fontFamily: 'Montserrat',
                       ),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding,
+                      vertical: verticalSpacing,
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -336,25 +328,31 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                         decoration: InputDecoration(
                           hintText: 'Please enter...',
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenSize.width * 0.04,
+                            vertical: screenSize.height * 0.02,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: verticalSpacing),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Text(
                       'Room Description',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: screenSize.width * 0.055,
                         fontWeight: FontWeight.w400,
                         fontFamily: 'Montserrat',
                       ),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding,
+                      vertical: verticalSpacing,
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -373,7 +371,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                         decoration: InputDecoration(
                           hintText: 'Please enter...',
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenSize.width * 0.04,
+                            vertical: screenSize.height * 0.02,
+                          ),
                         ),
                       ),
                     ),
@@ -381,7 +382,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                 ],
                 Spacer(),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: padding,
+                    vertical: verticalSpacing,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -392,7 +396,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                         child: Text(
                           'cancel',
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: screenSize.width * 0.055,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Montserrat',
                           ),
@@ -402,7 +406,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                         GestureDetector(
                           onTap: _isLoading ? null : _leaveRoom,
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenSize.width * 0.06,
+                              vertical: screenSize.height * 0.015,
+                            ),
                             decoration: BoxDecoration(
                               color: _isLoading ? Colors.grey : Colors.red[300],
                               borderRadius: BorderRadius.circular(24),
@@ -411,14 +418,14 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                               'Leave My Room',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: screenSize.width * 0.045,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Montserrat',
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: screenSize.width * 0.04),
                         GestureDetector(
                           onTap: () {
                             widget.onRoomCreatedAndNavToDetail(
@@ -428,7 +435,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                             );
                           },
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenSize.width * 0.06,
+                              vertical: screenSize.height * 0.015,
+                            ),
                             decoration: BoxDecoration(
                               color: _isLoading ? Colors.grey : Color(0xFFAED3EA),
                               borderRadius: BorderRadius.circular(24),
@@ -437,7 +447,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                               'View My Room',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: screenSize.width * 0.045,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Montserrat',
                               ),
@@ -448,7 +458,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                         GestureDetector(
                           onTap: _isLoading ? null : _createRoom,
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenSize.width * 0.06,
+                              vertical: screenSize.height * 0.015,
+                            ),
                             decoration: BoxDecoration(
                               color: _isLoading ? Colors.grey : Color(0xFFAED3EA),
                               borderRadius: BorderRadius.circular(24),
@@ -457,14 +470,14 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                               'Create Room',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: screenSize.width * 0.045,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Montserrat',
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: screenSize.width * 0.04),
                         GestureDetector(
                           onTap: () {
                             // TODO: 实现加入房间的功能
@@ -473,7 +486,10 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                             );
                           },
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenSize.width * 0.06,
+                              vertical: screenSize.height * 0.015,
+                            ),
                             decoration: BoxDecoration(
                               color: _isLoading ? Colors.grey : Color(0xFFAED3EA),
                               borderRadius: BorderRadius.circular(24),
@@ -482,7 +498,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                               'Join Room',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: screenSize.width * 0.045,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Montserrat',
                               ),
@@ -493,7 +509,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 32),
+                SizedBox(height: verticalSpacing * 2),
               ],
             ),
             if (_isLoading)

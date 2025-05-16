@@ -11,9 +11,20 @@ const TextStyle _subtitleStyle = TextStyle(
   color: Colors.black54,
 );
 
-class StatisticsPage extends StatelessWidget {
+class StatisticsPage extends StatefulWidget {
+  @override
+  _StatisticsPageState createState() => _StatisticsPageState();
+}
+
+class _StatisticsPageState extends State<StatisticsPage> {
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final padding = screenSize.width * 0.04;
+    final fontSize = isTablet ? 24.0 : 20.0;
+    final subtitleFontSize = isTablet ? 16.0 : 14.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -35,54 +46,26 @@ class StatisticsPage extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         children: [
-          _buildTotalCard(),
-          SizedBox(height: 16),
-          _buildTodayCard(),
-          SizedBox(height: 16),
-          _buildDistributionCard(),
-          SizedBox(height: 16),
-          _buildTimePeriodCard(),
+          _buildTotalCard(fontSize, subtitleFontSize),
+          SizedBox(height: padding),
+          _buildTodayCard(fontSize, subtitleFontSize),
+          SizedBox(height: padding),
+          _buildDistributionCard(fontSize, subtitleFontSize),
+          SizedBox(height: padding),
+          _buildTimePeriodCard(fontSize, subtitleFontSize),
         ],
       ),
     );
   }
 
+  Widget _buildTotalCard(double fontSize, double subtitleFontSize) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width * 0.04;
 
-
-
-
-
-
-
-
-
-
-
-  // Widget _buildTotalCard() => Container(
-  //   padding: EdgeInsets.all(16),
-  //   decoration: _cardDecoration(),
-  //   child: Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text('Total', style: _titleStyle),
-  //       SizedBox(height: 16),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           _buildTotalItem('frequency', '25'),
-  //           _buildTotalItem('duration', '11 h 37 min'),
-  //           _buildTotalItem('Average daily\nduration', '1 h 17 min'),
-  //         ],
-  //       ),
-  //     ],
-  //   ),
-  // );
-
-  Widget _buildTotalCard() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -97,18 +80,18 @@ class StatisticsPage extends StatelessWidget {
           Text(
             'Total',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: padding),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildTotalItem('frequency', '25'),
-              _buildTotalItem('duration', '11 h 37 min'),
-              _buildTotalItem('Average daily\nduration', '1 h 17 min'),
+              _buildTotalItem('frequency', '25', subtitleFontSize),
+              _buildTotalItem('duration', '11 h 37 min', subtitleFontSize),
+              _buildTotalItem('Average daily\nduration', '1 h 17 min', subtitleFontSize),
             ],
           ),
         ],
@@ -116,29 +99,12 @@ class StatisticsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildTodayCard(double fontSize, double subtitleFontSize) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width * 0.04;
 
-  // Widget _buildTodayCard() => Container(
-  //   padding: EdgeInsets.all(16),
-  //   decoration: _cardDecoration(),
-  //   child: Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text('Today', style: _titleStyle),
-  //       SizedBox(height: 16),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           _buildTotalItem('frequency', '3'),
-  //           _buildTotalItem('duration', '150 min'),
-  //           _buildTotalItem('give up', '0'),
-  //         ],
-  //       ),
-  //     ],
-  //   ),
-  // );
-   Widget _buildTodayCard() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -153,18 +119,18 @@ class StatisticsPage extends StatelessWidget {
           Text(
             'Today',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: padding),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildTotalItem('frequency', '3'),
-              _buildTotalItem('duration', '150 min'),
-              _buildTotalItem('give up', '0'),
+              _buildTotalItem('frequency', '3', subtitleFontSize),
+              _buildTotalItem('duration', '150 min', subtitleFontSize),
+              _buildTotalItem('give up', '0', subtitleFontSize),
             ],
           ),
         ],
@@ -172,66 +138,13 @@ class StatisticsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildDistributionCard(double fontSize, double subtitleFontSize) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width * 0.04;
+    final chartHeight = screenSize.height * 0.3;
 
-  // Widget _buildDistributionCard() => Container(
-  //   padding: EdgeInsets.all(16),
-  //   decoration: _cardDecoration(),
-  //   child: Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           Text('Distribution', style: _titleStyle),
-  //           Row(
-  //             children: [
-  //               Text('2025-04-03', style: _subtitleStyle),
-  //               Row(
-  //                 children: [
-  //                   IconButton(
-  //                     icon: Icon(Icons.chevron_left, color: Colors.black54),
-  //                     onPressed: () {},
-  //                   ),
-  //                   IconButton(
-  //                     icon: Icon(Icons.chevron_right, color: Colors.black54),
-  //                     onPressed: () {},
-  //                   ),
-  //                 ],
-  //               ),
-  //             ],
-  //           ),
-  //         ],
-  //       ),
-  //       SizedBox(height: 16),
-  //       SizedBox(
-  //         height: 200,
-  //         child: PieChart(
-  //           PieChartData(
-  //             sections: [
-  //               PieChartSectionData(
-  //                 color: Color(0xFFFFD6D6),
-  //                 value: 70,
-  //                 title: 'READING\n70 min',
-  //                 radius: 80,
-  //                 titleStyle: TextStyle(
-  //                   fontSize: 12,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //               // 其他饼图区块...
-  //             ],
-  //             sectionsSpace: 0,
-  //             centerSpaceRadius: 0,
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   ),
-  // );
-   Widget _buildDistributionCard() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -249,7 +162,7 @@ class StatisticsPage extends StatelessWidget {
               Text(
                 'Distribution',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -259,7 +172,7 @@ class StatisticsPage extends StatelessWidget {
                   Text(
                     '2025-04-03',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: subtitleFontSize,
                       color: Colors.black54,
                     ),
                   ),
@@ -279,9 +192,9 @@ class StatisticsPage extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: padding),
           SizedBox(
-            height: 200,
+            height: chartHeight,
             child: PieChart(
               PieChartData(
                 sections: [
@@ -289,9 +202,9 @@ class StatisticsPage extends StatelessWidget {
                     color: Color(0xFFFFD6D6),
                     value: 70,
                     title: 'READING\n70 min',
-                    radius: 80,
+                    radius: chartHeight * 0.4,
                     titleStyle: TextStyle(
-                      fontSize: 12,
+                      fontSize: subtitleFontSize,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -300,9 +213,9 @@ class StatisticsPage extends StatelessWidget {
                     color: Color(0xFFBFDDBE),
                     value: 50,
                     title: 'LISTENING\n50 min',
-                    radius: 80,
+                    radius: chartHeight * 0.4,
                     titleStyle: TextStyle(
-                      fontSize: 12,
+                      fontSize: subtitleFontSize,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -311,9 +224,9 @@ class StatisticsPage extends StatelessWidget {
                     color: Color(0xFFAED3EA),
                     value: 30,
                     title: 'WORDS\n30 min',
-                    radius: 80,
+                    radius: chartHeight * 0.4,
                     titleStyle: TextStyle(
-                      fontSize: 12,
+                      fontSize: subtitleFontSize,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -329,40 +242,13 @@ class StatisticsPage extends StatelessWidget {
     );
   }
 
-   
-   
-  //  是D生成的这个文件的初始版本的基础上改红色报错
-   Widget _buildTotalItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.black54,
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-   
+  Widget _buildTimePeriodCard(double fontSize, double subtitleFontSize) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width * 0.04;
+    final chartHeight = screenSize.height * 0.3;
 
-
-
-
-  Widget _buildTimePeriodCard() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -380,7 +266,7 @@ class StatisticsPage extends StatelessWidget {
               Text(
                 'Time period distribution',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -390,7 +276,7 @@ class StatisticsPage extends StatelessWidget {
                   Text(
                     '2025-04-03',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: subtitleFontSize,
                       color: Colors.black54,
                     ),
                   ),
@@ -410,13 +296,16 @@ class StatisticsPage extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: padding),
           SizedBox(
-            height: 200,
+            height: chartHeight,
             child: Center(
               child: Text(
                 '时间段分布图表将在这里显示',
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(
+                  fontSize: subtitleFontSize,
+                  color: Colors.black54
+                ),
               ),
             ),
           ),
@@ -425,7 +314,31 @@ class StatisticsPage extends StatelessWidget {
     );
   }
 
-BoxDecoration _cardDecoration() {
+  Widget _buildTotalItem(String label, String value, double subtitleFontSize) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: subtitleFontSize,
+            color: Colors.black54,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: subtitleFontSize * 1.2,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  BoxDecoration _cardDecoration() {
     return BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
@@ -435,9 +348,4 @@ BoxDecoration _cardDecoration() {
       borderRadius: BorderRadius.circular(20),
     );
   }
-
-//下面是在D生成的这个文件的初始版本的基础上改红色报错
-
-  // 其他辅助方法和样式定义...
-  // 保持与原始代码相同的实现
 }

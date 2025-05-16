@@ -547,7 +547,60 @@ class _TodoListPageState extends State<TodoListPage> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final crossAxisCount = isTablet ? 3 : 2;
+    final childAspectRatio = isTablet ? 2.5 : 2.0;
+    final padding = screenSize.width * 0.04;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('My Tasks'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _fetchTasks,
+          ),
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: _showAddTaskModal,
+          )
+        ],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _tasks.isEmpty
+              ? Center(
+                  child: Text(
+                    'No tasks yet. Add one!',
+                    style: TextStyle(
+                      fontSize: screenSize.width * 0.05,
+                      color: Colors.grey
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: EdgeInsets.all(padding),
+                  child: GridView.count(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: padding,
+                    mainAxisSpacing: padding,
+                    childAspectRatio: childAspectRatio,
+                    children: _tasks.map((task) => _buildTaskCard(task)).toList(),
+                  ),
+                ),
+    );
+  }
+
   Widget _buildTaskCard(Task task) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final fontSize = isTablet ? 20.0 : 18.0;
+    final iconSize = isTablet ? 40.0 : 32.0;
+    final padding = screenSize.width * 0.03;
+
     String countDownDisplayTime = '';
     if (task.mode == 'count down') {
       if (task.isRunning) {
@@ -564,8 +617,8 @@ class _TodoListPageState extends State<TodoListPage> {
         _showModifyTaskDialog(task);
       },
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-        padding: EdgeInsets.all(12),
+        margin: EdgeInsets.symmetric(vertical: padding * 0.5, horizontal: padding),
+        padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: _getTaskColor(task),
           borderRadius: BorderRadius.circular(15),
@@ -587,16 +640,22 @@ class _TodoListPageState extends State<TodoListPage> {
                 children: [
                   Text(
                     task.title,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w500
+                    ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
                   if (task.mode == 'count down' && countDownDisplayTime.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
+                      padding: EdgeInsets.only(top: padding * 0.3),
                       child: Text(
                         countDownDisplayTime,
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        style: TextStyle(
+                          fontSize: fontSize * 0.8,
+                          color: Colors.black87
+                        ),
                       ),
                     ),
                 ],
@@ -621,7 +680,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     },
                     child: Icon(
                       task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                      size: 32,
+                      size: iconSize,
                       color: Colors.black.withOpacity(0.7),
                     ),
                   ),
@@ -640,7 +699,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     },
                     child: Icon(
                       Icons.timer_outlined,
-                      size: 32,
+                      size: iconSize,
                       color: Colors.black.withOpacity(0.7),
                     ),
                   ),
@@ -649,44 +708,6 @@ class _TodoListPageState extends State<TodoListPage> {
           ],
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('My Tasks'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _fetchTasks,
-          ),
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _showAddTaskModal,
-          )
-        ],
-      ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _tasks.isEmpty
-              ? Center(
-                  child: Text(
-                    'No tasks yet. Add one!',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
-                    childAspectRatio: 2 / 1,
-                    children: _tasks.map((task) => _buildTaskCard(task)).toList(),
-                  ),
-                ),
     );
   }
 }

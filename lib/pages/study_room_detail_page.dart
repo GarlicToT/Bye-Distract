@@ -37,41 +37,51 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
     });
   }
 
-  Widget _buildBottomNavBar() => BottomNavigationBar(
-    currentIndex: _selectedIndex,
-    selectedItemColor: Colors.blue,
-    unselectedItemColor: Colors.grey,
-    type: BottomNavigationBarType.fixed,
-    backgroundColor: Colors.white,
-    elevation: 8,
-    onTap: (index) {
-      if (index == widget.initialPageIndex) {
-      } else {
-        Navigator.of(context).pop(index);
-      }
-    },
-    items: const [
-      BottomNavigationBarItem(
-        icon: Icon(Icons.format_list_bulleted),
-        label: 'To-do List',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.access_time),
-        label: 'Statistics',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.meeting_room),
-        label: 'Study Room',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.person_outline),
-        label: 'Me',
-      ),
-    ],
-  );
+  Widget _buildBottomNavBar() {
+    final screenSize = MediaQuery.of(context).size;
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
+      elevation: 8,
+      selectedFontSize: screenSize.width * 0.03, // 选中项字体大小
+      unselectedFontSize: screenSize.width * 0.03, // 未选中项字体大小
+      iconSize: screenSize.width * 0.06, // 图标大小
+      onTap: (index) {
+        if (index == widget.initialPageIndex) {
+        } else {
+          Navigator.of(context).pop(index);
+        }
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.format_list_bulleted),
+          label: 'To-do List',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.access_time),
+          label: 'Statistics',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.meeting_room),
+          label: 'Study Room',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Me',
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width * 0.05; // 水平内边距为屏幕宽度的5%
+    final verticalSpacing = screenSize.height * 0.02; // 垂直间距为屏幕高度的2%
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -79,7 +89,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.only(top: 24, bottom: 24),
+              padding: EdgeInsets.symmetric(
+                vertical: screenSize.height * 0.03,
+              ),
               decoration: BoxDecoration(
                 color: Color(0xFFAED3EA),
                 borderRadius: BorderRadius.only(
@@ -94,13 +106,13 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                       'Study Room',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: screenSize.width * 0.07, // 字体大小为屏幕宽度的7%
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   Positioned(
-                    left: 24,
+                    left: padding,
                     top: 0,
                     bottom: 0,
                     child: Center(
@@ -108,16 +120,24 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                         onTap: () {
                           Navigator.of(context).pop();
                         },
-                        child: Icon(Icons.arrow_back_ios, size: 28, color: Colors.white),
+                        child: Icon(
+                          Icons.arrow_back_ios,
+                          size: screenSize.width * 0.06, // 图标大小为屏幕宽度的6%
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                   Positioned(
-                    right: 24,
+                    right: padding,
                     top: 0,
                     bottom: 0,
                     child: Center(
-                      child: Icon(Icons.settings, size: 32, color: Colors.black54),
+                      child: Icon(
+                        Icons.settings,
+                        size: screenSize.width * 0.08, // 图标大小为屏幕宽度的8%
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
                 ],
@@ -129,7 +149,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 24, right: 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: padding,
+                        vertical: verticalSpacing * 2,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -142,27 +165,27 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                                     Text(
                                       widget.roomName,
                                       style: TextStyle(
-                                        fontSize: 28,
+                                        fontSize: screenSize.width * 0.07,
                                         fontWeight: FontWeight.bold,
                                         fontFamily: 'Montserrat',
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 4),
+                                SizedBox(height: verticalSpacing),
                                 Text(
                                   '(Room ID: ${widget.roomId})',
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: screenSize.width * 0.045,
                                     fontWeight: FontWeight.w600,
                                     fontFamily: 'Montserrat',
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                SizedBox(height: verticalSpacing),
                                 Text(
                                   widget.roomDescription,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: screenSize.width * 0.04,
                                     fontWeight: FontWeight.w400,
                                     fontFamily: 'Montserrat',
                                   ),
@@ -175,9 +198,23 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                             children: [
                               Row(
                                 children: [
-                                  Text('1', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                  SizedBox(width: 4),
-                                  Text('Your Rank', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black54)),
+                                  Text(
+                                    '1',
+                                    style: TextStyle(
+                                      fontSize: screenSize.width * 0.07,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(width: screenSize.width * 0.01),
+                                  Text(
+                                    'Your Rank',
+                                    style: TextStyle(
+                                      fontSize: screenSize.width * 0.04,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -185,9 +222,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 24),
+                    SizedBox(height: verticalSpacing * 2),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: EdgeInsets.symmetric(horizontal: padding),
                       child: Container(
                         decoration: BoxDecoration(
                           color: Color(0xFFFFE4E1),
@@ -201,41 +238,74 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                           ],
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: EdgeInsets.all(screenSize.width * 0.04),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('1', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-                              SizedBox(width: 12),
+                              Text(
+                                '1',
+                                style: TextStyle(
+                                  fontSize: screenSize.width * 0.08,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: screenSize.width * 0.03),
                               CircleAvatar(
                                 backgroundColor: Colors.grey[200],
-                                radius: 28,
-                                child: Icon(Icons.image, size: 32, color: Colors.grey),
+                                radius: screenSize.width * 0.07,
+                                child: Icon(
+                                  Icons.image,
+                                  size: screenSize.width * 0.08,
+                                  color: Colors.grey,
+                                ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: screenSize.width * 0.03),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        Text(_userName, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                                        Text(
+                                          _userName,
+                                          style: TextStyle(
+                                            fontSize: screenSize.width * 0.055,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                         Spacer(),
-                                        Icon(Icons.star_border, color: Colors.black54),
+                                        Icon(
+                                          Icons.star_border,
+                                          color: Colors.black54,
+                                          size: screenSize.width * 0.06,
+                                        ),
                                       ],
                                     ),
-                                    SizedBox(height: 2),
-                                    Text('Focused Today: 0 min', style: TextStyle(fontSize: 16)),
-                                    SizedBox(height: 2),
-                                    Row(
-                                      children: [
-                                        Text('0', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                        Text('min', style: TextStyle(fontSize: 16, color: Colors.black54)),
-                                      ],
+                                    SizedBox(height: verticalSpacing),
+                                    Text(
+                                      'Focused Today: 0 min',
+                                      style: TextStyle(
+                                        fontSize: screenSize.width * 0.04,
+                                      ),
                                     ),
-                                    SizedBox(height: 8),
+                                    SizedBox(height: verticalSpacing),
                                     Row(
                                       children: [
+                                        Text(
+                                          '0',
+                                          style: TextStyle(
+                                            fontSize: screenSize.width * 0.08,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        Text(
+                                          'min',
+                                          style: TextStyle(
+                                            fontSize: screenSize.width * 0.04,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -246,7 +316,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: verticalSpacing * 2),
                   ],
                 ),
               ),
