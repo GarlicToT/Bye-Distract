@@ -666,8 +666,8 @@ class _TodoListPageState extends State<TodoListPage> {
               children: [
                 if (task.mode == 'count down')
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final shouldRefresh = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => CountdownPage(
@@ -677,6 +677,9 @@ class _TodoListPageState extends State<TodoListPage> {
                           ),
                         ),
                       );
+                      if (shouldRefresh == true) {
+                        _fetchTasks();
+                      }
                     },
                     child: Icon(
                       task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
@@ -686,8 +689,8 @@ class _TodoListPageState extends State<TodoListPage> {
                   ),
                 if (task.mode == 'count up')
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final shouldRefresh = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => CountupPage(
@@ -696,6 +699,9 @@ class _TodoListPageState extends State<TodoListPage> {
                           ),
                         ),
                       );
+                      if (shouldRefresh == true) {
+                        _fetchTasks();
+                      }
                     },
                     child: Icon(
                       Icons.timer_outlined,

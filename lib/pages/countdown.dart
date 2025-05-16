@@ -47,11 +47,40 @@ class _CountdownPageState extends State<CountdownPage> {
     setState(() { _isFinished = true; });
     _timer?.cancel();
     _usedSeconds = widget.initialSeconds - _remainingSeconds;
-    final url = ApiConfig.finishTaskUrl;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Complete Timer'),
+          content: Text('Do you want to count this session in statistics?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _submitTaskToServerWithGivenUp(true);
+              },
+            ),
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _submitTaskToServerWithGivenUp(false);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _submitTaskToServerWithGivenUp(bool givenUp) async {
+    final url = 'http://10.252.88.78:8001/tasks/finish';
     final body = jsonEncode({
       'task_id': widget.taskId,
       'time': _usedSeconds,
-      'given_up': true,
+      'given_up': givenUp,
     });
     try {
       final response = await http.post(
@@ -61,26 +90,34 @@ class _CountdownPageState extends State<CountdownPage> {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final finishedTime = data['time'];
-        // 保存time到SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('finished_time_task_${widget.taskId}', finishedTime);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('任务已完成，专注时长: $finishedTime 秒')),
-          );
+        // 验证返回的数据是否完整
+        if (data['task_id'] == widget.taskId && 
+            data['is_finished'] == true) {
+          // 保存time到SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('finished_time_task_${widget.taskId}', data['time']);
+          
+          if (mounted) {
+            Navigator.of(context).pop(true); // 返回true表示需要刷新
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Invalid response from server')),
+            );
+          }
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('任务完成请求失败: ${response.body}')),
+            SnackBar(content: Text('Failed to complete task: ${response.body}')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('网络错误: $e')),
+          SnackBar(content: Text('Network error: $e')),
         );
       }
     }

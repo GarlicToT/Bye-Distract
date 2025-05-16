@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const TextStyle _titleStyle = TextStyle(
   fontSize: 20,
@@ -17,6 +20,61 @@ class StatisticsPage extends StatefulWidget {
 }
 
 class _StatisticsPageState extends State<StatisticsPage> {
+  Map<String, dynamic>? _statisticsData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStatistics();
+  }
+
+  Future<void> _fetchStatistics() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      if (userId == null) {
+        print('User ID not found');
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('http://10.252.88.78:8001/stas/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _statisticsData = jsonDecode(response.body);
+          _isLoading = false;
+        });
+      } else {
+        print('Failed to load statistics: ${response.statusCode}');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching statistics: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    if (hours > 0) {
+      return '$hours h $minutes min';
+    } else {
+      return '$minutes min';
+    }
+  }
+
+  String _formatMinutes(int seconds) {
+    return '${seconds ~/ 60} min';
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -45,24 +103,30 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.all(padding),
-        children: [
-          _buildTotalCard(fontSize, subtitleFontSize),
-          SizedBox(height: padding),
-          _buildTodayCard(fontSize, subtitleFontSize),
-          SizedBox(height: padding),
-          _buildDistributionCard(fontSize, subtitleFontSize),
-          SizedBox(height: padding),
-          _buildTimePeriodCard(fontSize, subtitleFontSize),
-        ],
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _fetchStatistics,
+              child: ListView(
+                padding: EdgeInsets.all(padding),
+                children: [
+                  _buildTotalCard(fontSize, subtitleFontSize),
+                  SizedBox(height: padding),
+                  _buildTodayCard(fontSize, subtitleFontSize),
+                  SizedBox(height: padding),
+                  _buildDistributionCard(fontSize, subtitleFontSize),
+                  SizedBox(height: padding),
+                  _buildTimePeriodCard(fontSize, subtitleFontSize),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildTotalCard(double fontSize, double subtitleFontSize) {
     final screenSize = MediaQuery.of(context).size;
     final padding = screenSize.width * 0.04;
+    final total = _statisticsData?['total'] ?? {};
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -89,9 +153,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildTotalItem('frequency', '25', subtitleFontSize),
-              _buildTotalItem('duration', '11 h 37 min', subtitleFontSize),
-              _buildTotalItem('Average daily\nduration', '1 h 17 min', subtitleFontSize),
+              _buildTotalItem('frequency', '${total['total_frequency'] ?? 0}', subtitleFontSize),
+              _buildTotalItem('duration', _formatDuration(total['total_duration'] ?? 0), subtitleFontSize),
+              _buildTotalItem('Average daily\nduration', _formatDuration(total['average_daily_duration'] ?? 0), subtitleFontSize),
             ],
           ),
         ],
@@ -102,6 +166,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget _buildTodayCard(double fontSize, double subtitleFontSize) {
     final screenSize = MediaQuery.of(context).size;
     final padding = screenSize.width * 0.04;
+    final today = _statisticsData?['today'] ?? {};
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -128,9 +193,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildTotalItem('frequency', '3', subtitleFontSize),
-              _buildTotalItem('duration', '150 min', subtitleFontSize),
-              _buildTotalItem('give up', '0', subtitleFontSize),
+              _buildTotalItem('frequency', '${today['frequency_day'] ?? 0}', subtitleFontSize),
+              _buildTotalItem('duration', _formatMinutes(today['duration_day'] ?? 0), subtitleFontSize),
+              _buildTotalItem('give up', '${today['given_up_day'] ?? 0}', subtitleFontSize),
             ],
           ),
         ],

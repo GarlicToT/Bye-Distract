@@ -1,130 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'study_room_detail_page.dart'; // For navigation
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../config/api_config.dart';
-// import 'create_study_room.dart'; // create_study_room will be handled by parent
 
-class StudyRoomPage extends StatefulWidget {
-  final VoidCallback onCreateRoom;
-  // Add a new callback for viewing an existing room, to be handled by GeneratorPage
-  final Function(String roomId, String roomName, String roomDescription) onViewExistingRoom;
-
-  const StudyRoomPage({
-    Key? key,
-    required this.onCreateRoom,
-    required this.onViewExistingRoom,
-  }) : super(key: key);
-
-  @override
-  State<StudyRoomPage> createState() => _StudyRoomPageState();
-}
-
-class _StudyRoomPageState extends State<StudyRoomPage> {
-  bool _isLoading = true;
-  bool _hasExistingRoom = false;
-  String? _existingRoomId;
-  String? _existingRoomName;
-  String? _existingRoomDescription;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkUserStudyRoom();
-  }
-
-  Future<void> _checkUserStudyRoom() async {
-    setState(() { _isLoading = true; });
-    
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('user_id');
-      
-      if (userId == null) {
-        setState(() { 
-          _isLoading = false;
-          _hasExistingRoom = false;
-        });
-        return;
-      }
-
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/study_room/user/$userId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data != null && data['room_id'] != null) {
-          setState(() {
-            _hasExistingRoom = true;
-            _existingRoomId = data['room_id'].toString();
-            _existingRoomName = data['room_name'];
-            _existingRoomDescription = data['room_description'];
-          });
-        } else {
-          setState(() { _hasExistingRoom = false; });
-        }
-      } else {
-        setState(() { _hasExistingRoom = false; });
-      }
-    } catch (e) {
-      setState(() { _hasExistingRoom = false; });
-    } finally {
-      setState(() { _isLoading = false; });
-    }
-  }
-
-  Future<void> _leaveRoom() async {
-    if (_existingRoomId == null) return;
-
-    setState(() { _isLoading = true; });
-    
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('user_id') ?? 0;
-      
-      final response = await http.post(
-        Uri.parse(ApiConfig.leaveStudyRoomUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'user_id': userId,
-          'room_id': int.parse(_existingRoomId!),
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _hasExistingRoom = false;
-          _existingRoomId = null;
-          _existingRoomName = null;
-          _existingRoomDescription = null;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully left the study room')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to leave the room: ${response.body}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: $e')),
-      );
-    } finally {
-      setState(() { _isLoading = false; });
-    }
-  }
-
+class StudyRoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final buttonSize = screenSize.width * 0.3; // 按钮大小为屏幕宽度的30%
-    final spacing = screenSize.height * 0.05; // 间距为屏幕高度的5%
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -133,76 +11,24 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenSize.width * 0.05,
-                      vertical: screenSize.height * 0.05,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_hasExistingRoom) ...[
-                          GestureDetector(
-                            onTap: () {
-                              if (_existingRoomId != null && _existingRoomName != null && _existingRoomDescription != null) {
-                                widget.onViewExistingRoom(_existingRoomId!, _existingRoomName!, _existingRoomDescription!);
-                              }
-                            },
-                            child: _buildCircularButton(
-                              icon: Icons.visibility,
-                              label: 'View My Room',
-                              color: Color(0xFFFFD6D6),
-                              size: buttonSize,
-                            ),
-                          ),
-                          SizedBox(height: spacing),
-                          GestureDetector(
-                            onTap: () {
-                              _leaveRoom();
-                            },
-                            child: _buildCircularButton(
-                              icon: Icons.exit_to_app,
-                              label: 'Leave My Room',
-                              color: Colors.red[300]!,
-                              size: buttonSize,
-                            ),
-                          ),
-                        ] else ...[
-                          GestureDetector(
-                            onTap: () {
-                              widget.onCreateRoom();
-                            },
-                            child: _buildCircularButton(
-                              icon: Icons.add,
-                              label: 'Create Room',
-                              color: Color(0xFFFFD6D6),
-                              size: buttonSize,
-                            ),
-                          ),
-                          SizedBox(height: spacing),
-                          GestureDetector(
-                            onTap: () {
-                              _showJoinRoomDialog();
-                            },
-                            child: _buildCircularButton(
-                              icon: Icons.home,
-                              label: 'Join Room',
-                              color: Color(0xFFAED3EA),
-                              size: buttonSize,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildCircularButton(
+              icon: Icons.add,
+              label: 'Create Room',
+              color: Color(0xFFFFD6D6),
             ),
+            SizedBox(height: 40),
+            _buildCircularButton(
+              icon: Icons.home,
+              label: 'Join Room',
+              color: Color(0xFFAED3EA),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -210,13 +36,12 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
     required IconData icon,
     required String label,
     required Color color,
-    required double size,
   }) {
     return Column(
       children: [
         Container(
-          width: size,
-          height: size,
+          width: 120,
+          height: 120,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
@@ -231,18 +56,13 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                color: Colors.white,
-                size: size * 0.3, // 图标大小为按钮大小的30%
-              ),
-              SizedBox(height: size * 0.05), // 间距为按钮大小的5%
+              Icon(icon, color: Colors.white, size: 32),
+              SizedBox(height: 8),
               Text(
                 label,
-                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: size * 0.15, // 字体大小为按钮大小的15%
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -250,68 +70,6 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
           ),
         ),
       ],
-    );
-  }
-
-  // 加入房间弹窗方法
-  void _showJoinRoomDialog() {
-    final TextEditingController _roomCodeController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        final screenSize = MediaQuery.of(context).size;
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Join Room',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: screenSize.width * 0.06,
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _roomCodeController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter Room Code',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    // 这里以后写加入房间的逻辑
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    minimumSize: Size(double.infinity, 40),
-                  ),
-                  child: Text(
-                    'Join',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenSize.width * 0.05,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 

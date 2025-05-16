@@ -42,11 +42,39 @@ class _CountupPageState extends State<CountupPage> {
     setState(() { _isFinished = true; });
     _timer?.cancel();
 
-    final url = ApiConfig.finishTaskUrl;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Complete Timer'),
+          content: Text('Do you want to count this session in statistics?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _submitTaskToServerWithGivenUp(true);
+              },
+            ),
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _submitTaskToServerWithGivenUp(false);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _submitTaskToServerWithGivenUp(bool givenUp) async {
+    final url = 'http://10.252.88.78:8001/tasks/finish';
     final body = jsonEncode({
       'task_id': widget.taskId,
       'time': _elapsedSeconds,
-      'given_up': false,
+      'given_up': givenUp,
     });
 
     try {
@@ -58,20 +86,24 @@ class _CountupPageState extends State<CountupPage> {
       if (mounted) {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          final finishedTime = data['time'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('任务已完成，专注时长: $finishedTime 秒')),
-          );
+          if (data['task_id'] == widget.taskId && 
+              data['is_finished'] == true) {
+            Navigator.of(context).pop(true);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Invalid response from server')),
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('任务完成请求失败: ${response.body}')),
+            SnackBar(content: Text('Failed to complete task: ${response.body}')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('网络错误: $e')),
+          SnackBar(content: Text('Network error: $e')),
         );
       }
     }

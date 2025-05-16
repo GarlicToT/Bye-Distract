@@ -5,8 +5,6 @@ import 'pages/statistics_page.dart';
 import 'pages/study_room_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/login_page.dart';
-import 'pages/create_study_room.dart';
-import 'pages/study_room_detail_page.dart';
 
 void main() => runApp(MyApp());
 
@@ -42,14 +40,7 @@ class GeneratorPage extends StatefulWidget {
 }
 
 class GeneratorPageState extends State<GeneratorPage> {
-  // List<Task> tasks = [
-  //   Task(title: 'IELTS Speaking', mode: 'count down', countdownTime: 30),
-  //   Task(title: 'IELTS Listening', mode: 'count down', countdownTime: 45),
-  //   Task(title: 'IELTS Reading', mode: 'count up'),
-  // ];
-
   int _selectedIndex = 0;
-  bool _isCreatingStudyRoom = false;
 
   @override
   Widget build(BuildContext context) {
@@ -62,66 +53,11 @@ class GeneratorPageState extends State<GeneratorPage> {
   Widget _buildCurrentPage() {
     switch (_selectedIndex) {
       case 0:
-        // return TodoListPage(
-        //   tasks: tasks,
-        //   onAddTask: (newTask) => setState(() => tasks.add(newTask)),
-        // );
-        return TodoListPage(); // TodoListPage 现在自行管理任务
+        return TodoListPage();
       case 1:
         return StatisticsPage();
       case 2:
-        return _isCreatingStudyRoom
-            ? CreateStudyRoomPage(
-                onCancel: () {
-                  setState(() {
-                    _isCreatingStudyRoom = false;
-                  });
-                },
-                onRoomCreatedAndNavToDetail: (String roomId, String roomName, String roomDescription) async {
-                  setState(() {
-                    _isCreatingStudyRoom = false;
-                  });
-                  final selectedIndexFromDetail = await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => StudyRoomDetailPage(
-                      roomId: roomId,
-                      roomName: roomName,
-                      roomDescription: roomDescription,
-                      initialPageIndex: 2,
-                    )),
-                  );
-                  if (selectedIndexFromDetail != null && selectedIndexFromDetail is int) {
-                    if (mounted) {
-                      setState(() {
-                        _selectedIndex = selectedIndexFromDetail;
-                      });
-                    }
-                  }
-                },
-              )
-            : StudyRoomPage(
-                onCreateRoom: () {
-                  setState(() {
-                    _isCreatingStudyRoom = true;
-                  });
-                },
-                onViewExistingRoom: (String roomId, String roomName, String roomDescription) async {
-                  final selectedIndexFromDetail = await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => StudyRoomDetailPage(
-                      roomId: roomId,
-                      roomName: roomName,
-                      roomDescription: roomDescription,
-                      initialPageIndex: 2,
-                    )),
-                  );
-                  if (selectedIndexFromDetail != null && selectedIndexFromDetail is int) {
-                    if (mounted) {
-                      setState(() {
-                        _selectedIndex = selectedIndexFromDetail;
-                      });
-                    }
-                  }
-                },
-              );
+        return StudyRoomPage();
       case 3:
         return ProfilePage();
       default:
