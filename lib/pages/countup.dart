@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class CountupPage extends StatefulWidget {
   final String taskTitle;
@@ -41,7 +42,7 @@ class _CountupPageState extends State<CountupPage> {
     setState(() { _isFinished = true; });
     _timer?.cancel();
 
-    final url = 'http://10.252.88.78:8001/tasks/finish';
+    final url = ApiConfig.finishTaskUrl;
     final body = jsonEncode({
       'task_id': widget.taskId,
       'time': _elapsedSeconds,

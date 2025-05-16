@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
+import '../config/api_config.dart';
 import 'countdown.dart';
 import 'countup.dart';
 
@@ -20,9 +21,6 @@ class _TodoListPageState extends State<TodoListPage> {
 
   Timer? _timer;
   int _remainingSeconds = 0;
-  final String addTaskBaseUrl = 'http://10.252.88.78:8001/tasks/add';
-  final String fetchTasksBaseUrl = 'http://10.252.88.78:8001/tasks';
-  final String deleteTaskBaseUrl = 'http://10.252.88.78:8001/tasks/del';
 
   @override
   void initState() {
@@ -46,9 +44,9 @@ class _TodoListPageState extends State<TodoListPage> {
         return;
       }
 
-      final response = await http.get(Uri.parse('$fetchTasksBaseUrl/$userId'));
+      final response = await http.get(Uri.parse('${ApiConfig.fetchTasksUrl}/$userId'));
       
-      print('Fetching tasks from: $fetchTasksBaseUrl/$userId');
+      print('Fetching tasks from: ${ApiConfig.fetchTasksUrl}/$userId');
       print('Fetch tasks response status: ${response.statusCode}');
       print('Fetch tasks response body: ${response.body}');
 
@@ -98,11 +96,11 @@ class _TodoListPageState extends State<TodoListPage> {
         'time': mode == 'count down' ? (countdownTimeInMinutes ?? 0) * 60 : 0,
       };
       
-      print('发送请求到: $addTaskBaseUrl');
+      print('发送请求到: ${ApiConfig.addTaskUrl}');
       print('请求体: ${jsonEncode(requestBody)}');
       
       final response = await http.post(
-        Uri.parse(addTaskBaseUrl),
+        Uri.parse(ApiConfig.addTaskUrl),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -128,11 +126,11 @@ class _TodoListPageState extends State<TodoListPage> {
   Future<void> _deleteTaskFromServer(int taskId) async {
     try {
       final requestBody = {'task_id': taskId};
-      print('发送删除请求到: $deleteTaskBaseUrl');
+      print('发送删除请求到: ${ApiConfig.deleteTaskUrl}');
       print('请求体: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
-        Uri.parse(deleteTaskBaseUrl),
+        Uri.parse(ApiConfig.deleteTaskUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -143,10 +141,14 @@ class _TodoListPageState extends State<TodoListPage> {
       if (response.statusCode == 200) {
         final responseJson = jsonDecode(response.body);
         if (responseJson['code'] == 200) {
+          // 从本地任务列表中移除被删除的任务
+          setState(() {
+            _tasks.removeWhere((task) => task.taskId == taskId);
+          });
+          
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(responseJson['message'] ?? 'delete successful!'))
+            SnackBar(content: Text('Task deleted successfully!'))
           );
-          _fetchTasks();
         } else {
           throw Exception('Failed to delete task: ${responseJson['message']}');
         }
@@ -157,6 +159,58 @@ class _TodoListPageState extends State<TodoListPage> {
       print('Error deleting task: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete task: $e'))
+      );
+    }
+  }
+
+  Future<void> _modifyTask(Task task, String newTitle, String newMode, double? countdownTimeInMinutes) async {
+    try {
+      final requestBody = {
+        'task_id': task.taskId,
+        'expected_mode': newMode == 'count down' ? 0 : 1,
+        'title': newTitle,
+        'time': newMode == 'count down' ? (countdownTimeInMinutes ?? 0) * 60 : 0,
+      };
+      
+      print('发送修改请求到: ${ApiConfig.modifyTaskUrl}');
+      print('请求体: ${jsonEncode(requestBody)}');
+      
+      final response = await http.post(
+        Uri.parse(ApiConfig.modifyTaskUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print('修改响应状态码: ${response.statusCode}');
+      print('修改响应体: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        
+        // 更新任务列表中的对应任务
+        setState(() {
+          final taskIndex = _tasks.indexWhere((t) => t.taskId == task.taskId);
+          if (taskIndex != -1) {
+            _tasks[taskIndex] = Task(
+              taskId: responseData['task_id'],
+              title: responseData['title'],
+              mode: responseData['expected_mode'] == 0 ? 'count down' : 'count up',
+              countdownTime: responseData['expected_mode'] == 0 ? (responseData['time'] as int) ~/ 60 : null,
+              isRunning: false,
+            );
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Task modified successfully!'))
+        );
+      } else {
+        throw Exception('Failed to modify task. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error modifying task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to modify task: $e'))
       );
     }
   }
@@ -213,13 +267,13 @@ class _TodoListPageState extends State<TodoListPage> {
           content: Text('Are you sure you want to delete the task "${task.title}" ?'),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('No'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text('Yes', style: TextStyle(color: Colors.red)),
               onPressed: () {
                 Navigator.of(context).pop();
                 _deleteTaskFromServer(task.taskId);
@@ -362,6 +416,137 @@ class _TodoListPageState extends State<TodoListPage> {
     }
   }
 
+  void _showModifyTaskDialog(Task task) {
+    String mode = task.mode;
+    double countdownTimeSliderValue = task.countdownTime?.toDouble() ?? 25.0;
+    TextEditingController titleController = TextEditingController(text: task.title);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Modify Task Mode'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Task Title',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mode == 'count down'
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[300],
+                        ),
+                        onPressed: () => setState(() => mode = 'count down'),
+                        child: Text('count down', 
+                          style: TextStyle(
+                            color: mode == 'count down' ? Colors.white : Colors.black
+                          )
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mode == 'count up'
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[300],
+                        ),
+                        onPressed: () => setState(() => mode = 'count up'),
+                        child: Text('count up', 
+                          style: TextStyle(
+                            color: mode == 'count up' ? Colors.white : Colors.black
+                          )
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (mode == 'count down') ...[
+                    SizedBox(height: 16),
+                    Text('${countdownTimeSliderValue.toInt()} minutes'),
+                    Slider(
+                      min: 5,
+                      max: 60,
+                      value: countdownTimeSliderValue,
+                      divisions: 11,
+                      label: '${countdownTimeSliderValue.toInt()} min',
+                      onChanged: (val) => setState(() => countdownTimeSliderValue = val),
+                    ),
+                  ],
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showDeleteConfirmationDialog(task);
+                  },
+                ),
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.check_circle_outline),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _modifyTask(
+                      task,
+                      titleController.text,
+                      mode,
+                      mode == 'count down' ? countdownTimeSliderValue : null,
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTaskOptionsDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Task Options'),
+          content: Text('What would you like to do with "${task.title}"?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Modify Task'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showModifyTaskDialog(task);
+              },
+            ),
+            TextButton(
+              child: Text('Delete Task', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showDeleteConfirmationDialog(task);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildTaskCard(Task task) {
     String countDownDisplayTime = '';
     if (task.mode == 'count down') {
@@ -376,31 +561,7 @@ class _TodoListPageState extends State<TodoListPage> {
 
     return GestureDetector(
       onTap: () {
-        if (task.mode == 'count down') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CountdownPage(
-                taskTitle: task.title,
-                initialSeconds: (task.countdownTime ?? 0) * 60,
-                taskId: task.taskId,
-              ),
-            ),
-          );
-        } else if (task.mode == 'count up') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CountupPage(
-                taskTitle: task.title,
-                taskId: task.taskId
-              ),
-            ),
-          );
-        }
-      },
-      onLongPress: () {
-        _showDeleteConfirmationDialog(task);
+        _showModifyTaskDialog(task);
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
@@ -445,16 +606,43 @@ class _TodoListPageState extends State<TodoListPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (task.mode == 'count down')
-                  Icon(
-                    task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                    size: 32,
-                    color: Colors.black.withOpacity(0.7),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CountdownPage(
+                            taskTitle: task.title,
+                            initialSeconds: (task.countdownTime ?? 0) * 60,
+                            taskId: task.taskId,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                      size: 32,
+                      color: Colors.black.withOpacity(0.7),
+                    ),
                   ),
                 if (task.mode == 'count up')
-                  Icon(
-                    Icons.timer_outlined,
-                    size: 32,
-                    color: Colors.black.withOpacity(0.7),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CountupPage(
+                            taskTitle: task.title,
+                            taskId: task.taskId,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      Icons.timer_outlined,
+                      size: 32,
+                      color: Colors.black.withOpacity(0.7),
+                    ),
                   ),
               ],
             )

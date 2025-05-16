@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 
 class CountdownPage extends StatefulWidget {
   final String taskTitle;
@@ -46,7 +47,7 @@ class _CountdownPageState extends State<CountdownPage> {
     setState(() { _isFinished = true; });
     _timer?.cancel();
     _usedSeconds = widget.initialSeconds - _remainingSeconds;
-    final url = 'http://10.252.88.78:8001/tasks/finish';
+    final url = ApiConfig.finishTaskUrl;
     final body = jsonEncode({
       'task_id': widget.taskId,
       'time': _usedSeconds,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 import 'study_room_detail_page.dart';
 
 class CreateStudyRoomPage extends StatefulWidget {
@@ -48,7 +49,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
       return;
     }
     setState(() { _isLoading = true; });
-    final url = 'http://10.252.88.78:8001/study_room/add';
+    final url = ApiConfig.createStudyRoomUrl;
     final body = jsonEncode({
       'user_id': userId,
       'room_name': roomName,

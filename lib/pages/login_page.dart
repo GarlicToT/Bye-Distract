@@ -4,6 +4,7 @@ import 'register_page.dart'; // 新增
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -37,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.252.88.78:8001/users/login'),
+        Uri.parse(ApiConfig.loginUrl),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -90,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('网络错误，请检查网络连接'),
+          content: Text('Network error. Please check the network connection'),
           backgroundColor: Colors.red,
         ),
       );
