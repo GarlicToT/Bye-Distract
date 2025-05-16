@@ -1,5 +1,7 @@
 class ApiConfig {
-  static const String baseUrl = 'http://10.252.88.78:8001';
+  static const String baseUrl = 'http://10.253.52.107:8001';
+  // static const String baseUrl = 'http://10.252.88.78:8001';
+
   
   // 用户相关
   static String get loginUrl => '$baseUrl/users/login';
@@ -14,4 +16,5 @@ class ApiConfig {
   
   // 学习室相关
   static String get createStudyRoomUrl => '$baseUrl/study_room/add';
+  static String get leaveStudyRoomUrl => '$baseUrl/study_room/leave';
 } 

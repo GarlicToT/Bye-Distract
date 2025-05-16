@@ -23,6 +23,72 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
   final TextEditingController _roomNameController = TextEditingController();
   final TextEditingController _roomDescController = TextEditingController();
   bool _isLoading = false;
+  String? _existingRoomId;
+  String? _existingRoomName;
+  String? _existingRoomDescription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingRoom();
+  }
+
+  Future<void> _loadExistingRoom() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _existingRoomId = prefs.getString('created_room_id');
+      _existingRoomName = prefs.getString('created_room_name');
+      _existingRoomDescription = prefs.getString('created_room_description');
+    });
+  }
+
+  Future<void> _leaveRoom() async {
+    if (_existingRoomId == null) return;
+
+    setState(() { _isLoading = true; });
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
+      
+      final response = await http.post(
+        Uri.parse(ApiConfig.leaveStudyRoomUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'user_id': userId,
+          'room_id': int.parse(_existingRoomId!),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // 清除保存的房间信息
+        await prefs.remove('created_room_id');
+        await prefs.remove('created_room_name');
+        await prefs.remove('created_room_description');
+        
+        setState(() {
+          _existingRoomId = null;
+          _existingRoomName = null;
+          _existingRoomDescription = null;
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Successfully left the study room')),
+        );
+      } else {
+        setState(() { _isLoading = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to leave the room: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      setState(() { _isLoading = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Network error: $e')),
+      );
+    }
+  }
 
   Future<void> _createRoom() async {
     final prefs = await SharedPreferences.getInstance();
@@ -176,7 +242,7 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                   ),
                   child: Center(
                     child: Text(
-                      'Create Study Room',
+                      _existingRoomId != null ? 'My Study Room' : 'Create Study Room',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -185,79 +251,135 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 32),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Text(
-                    'Room Name',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                if (_existingRoomId != null) ...[
+                  SizedBox(height: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Current Room',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'Montserrat',
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _existingRoomName ?? '',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                _existingRoomDescription ?? '',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: _roomNameController,
-                      decoration: InputDecoration(
-                        hintText: 'Please enter...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ] else ...[
+                  SizedBox(height: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Text(
+                      'Room Name',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Montserrat',
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Text(
-                    'Room Description',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _roomNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Please enter...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _roomDescController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'Please enter...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Text(
+                      'Room Description',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Montserrat',
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _roomDescController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Please enter...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                Spacer(),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
                   child: Row(
@@ -276,18 +398,98 @@ class _CreateStudyRoomPageState extends State<CreateStudyRoomPage> {
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: _isLoading ? null : _createRoom,
-                        child: Text(
-                          'Create',
-                          style: TextStyle(
-                            color: _isLoading ? Colors.grey : Colors.black87,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Montserrat',
+                      if (_existingRoomId != null) ...[
+                        GestureDetector(
+                          onTap: _isLoading ? null : _leaveRoom,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _isLoading ? Colors.grey : Colors.red[300],
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Text(
+                              'Leave My Room',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Montserrat',
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () {
+                            widget.onRoomCreatedAndNavToDetail(
+                              _existingRoomId!,
+                              _existingRoomName!,
+                              _existingRoomDescription!,
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _isLoading ? Colors.grey : Color(0xFFAED3EA),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Text(
+                              'View My Room',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Montserrat',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        GestureDetector(
+                          onTap: _isLoading ? null : _createRoom,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _isLoading ? Colors.grey : Color(0xFFAED3EA),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Text(
+                              'Create Room',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Montserrat',
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () {
+                            // TODO: 实现加入房间的功能
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Join Room feature coming soon!')),
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _isLoading ? Colors.grey : Color(0xFFAED3EA),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Text(
+                              'Join Room',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Montserrat',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

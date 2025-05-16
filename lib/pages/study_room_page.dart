@@ -67,27 +67,59 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (_hasExistingRoom && _existingRoomId != null && _existingRoomName != null && _existingRoomDescription != null) {
-                        // Call the new callback to notify GeneratorPage
-                        widget.onViewExistingRoom(_existingRoomId!, _existingRoomName!, _existingRoomDescription!);
-                      } else {
-                        widget.onCreateRoom();
-                      }
-                    },
-                    child: _buildCircularButton(
-                      icon: _hasExistingRoom ? Icons.visibility : Icons.add,
-                      label: _hasExistingRoom ? 'View My Room' : 'Create Room',
-                      color: Color(0xFFFFD6D6),
+                  if (_hasExistingRoom) ...[
+                    GestureDetector(
+                      onTap: () {
+                        if (_existingRoomId != null && _existingRoomName != null && _existingRoomDescription != null) {
+                          widget.onViewExistingRoom(_existingRoomId!, _existingRoomName!, _existingRoomDescription!);
+                        }
+                      },
+                      child: _buildCircularButton(
+                        icon: Icons.visibility,
+                        label: 'View My Room',
+                        color: Color(0xFFFFD6D6),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 40),
-                  _buildCircularButton(
-                    icon: Icons.home,
-                    label: 'Join Room',
-                    color: Color(0xFFAED3EA),
-                  ),
+                    SizedBox(height: 40),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: 实现离开房间的功能
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Leave Room feature coming soon!')),
+                        );
+                      },
+                      child: _buildCircularButton(
+                        icon: Icons.exit_to_app,
+                        label: 'Leave My Room',
+                        color: Colors.red[300]!,
+                      ),
+                    ),
+                  ] else ...[
+                    GestureDetector(
+                      onTap: () {
+                        widget.onCreateRoom();
+                      },
+                      child: _buildCircularButton(
+                        icon: Icons.add,
+                        label: 'Create Room',
+                        color: Color(0xFFFFD6D6),
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: 实现加入房间的功能
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Join Room feature coming soon!')),
+                        );
+                      },
+                      child: _buildCircularButton(
+                        icon: Icons.home,
+                        label: 'Join Room',
+                        color: Color(0xFFAED3EA),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

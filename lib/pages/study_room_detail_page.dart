@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudyRoomDetailPage extends StatefulWidget {
   final String roomId;
@@ -20,11 +21,20 @@ class StudyRoomDetailPage extends StatefulWidget {
 
 class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
   late int _selectedIndex;
+  String _userName = '';
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialPageIndex;
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('user_name') ?? 'User';
+    });
   }
 
   Widget _buildBottomNavBar() => BottomNavigationBar(
@@ -209,7 +219,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                                   children: [
                                     Row(
                                       children: [
-                                        Text('Tata', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                                        Text(_userName, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                                         Spacer(),
                                         Icon(Icons.star_border, color: Colors.black54),
                                       ],
@@ -226,10 +236,6 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                                     SizedBox(height: 8),
                                     Row(
                                       children: [
-                                        // Container for 'Focus Streak' and 'Total Focus' are removed.
-                                        // The Row will be empty if these were the only children.
-                                        // If the Row itself is no longer needed, it can also be removed.
-                                        // For now, just removing the children as requested.
                                       ],
                                     ),
                                   ],
