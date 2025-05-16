@@ -187,10 +187,7 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
                           SizedBox(height: spacing),
                           GestureDetector(
                             onTap: () {
-                              // TODO: 实现加入房间的功能
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Join Room feature coming soon!')),
-                              );
+                              _showJoinRoomDialog();
                             },
                             child: _buildCircularButton(
                               icon: Icons.home,
@@ -253,6 +250,68 @@ class _StudyRoomPageState extends State<StudyRoomPage> {
           ),
         ),
       ],
+    );
+  }
+
+  // 加入房间弹窗方法
+  void _showJoinRoomDialog() {
+    final TextEditingController _roomCodeController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        final screenSize = MediaQuery.of(context).size;
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Join Room',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenSize.width * 0.06,
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: _roomCodeController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter Room Code',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    // 这里以后写加入房间的逻辑
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: Size(double.infinity, 40),
+                  ),
+                  child: Text(
+                    'Join',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenSize.width * 0.05,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
