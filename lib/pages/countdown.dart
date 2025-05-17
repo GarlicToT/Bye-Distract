@@ -76,7 +76,8 @@ class _CountdownPageState extends State<CountdownPage> {
   }
 
   Future<void> _submitTaskToServerWithGivenUp(bool givenUp) async {
-    final url = 'http://10.252.88.78:8001/tasks/finish';
+    // final url = 'http://10.252.88.78:8001/tasks/finish';
+    final url = ApiConfig.finishTaskUrl;
     final body = jsonEncode({
       'task_id': widget.taskId,
       'time': _usedSeconds,

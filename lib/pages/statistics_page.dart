@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 
 const TextStyle _titleStyle = TextStyle(
   fontSize: 20,
@@ -39,7 +40,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.252.88.78:8001/stas/$userId'),
+        Uri.parse('${ApiConfig.baseUrl}/stas/$userId'),
       );
 
       if (response.statusCode == 200) {
