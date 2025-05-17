@@ -39,9 +39,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
         return;
       }
 
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/stas/$userId'),
-      );
+      // final response = await http.get(
+      //   Uri.parse('${ApiConfig.baseUrl}/stas/$userId'),
+      // );
+      final response = await http.get(Uri.parse('${ApiConfig.getStatisticsUrl}/$userId'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -63,6 +64,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   String _formatDuration(int seconds) {
+    if (seconds < 60) {
+      return '$seconds sec';
+    }
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     if (hours > 0) {
@@ -70,10 +74,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
     } else {
       return '$minutes min';
     }
-  }
-
-  String _formatMinutes(int seconds) {
-    return '${seconds ~/ 60} min';
   }
 
   @override
@@ -125,92 +125,72 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildTotalCard(double fontSize, double subtitleFontSize) {
-    final screenSize = MediaQuery.of(context).size;
-    final padding = screenSize.width * 0.04;
     final total = _statisticsData?['total'] ?? {};
-
-    return Container(
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Total',
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: padding),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildTotalItem('frequency', '${total['total_frequency'] ?? 0}', subtitleFontSize),
-              _buildTotalItem('duration', _formatDuration(total['total_duration'] ?? 0), subtitleFontSize),
-              _buildTotalItem('Average daily\nduration', _formatDuration(total['average_daily_duration'] ?? 0), subtitleFontSize),
-            ],
-          ),
-        ],
-      ),
+    return _buildStatsCard(
+      title: 'Total',
+      items: [
+        _StatItem('frequency', '${total['total_frequency'] ?? 0}'),
+        _StatItem('duration', _formatDuration(total['total_duration'] ?? 0)),
+        _StatItem('Average daily\nduration', 
+          _formatDuration((total['average_daily_duration']?.toInt() ?? 0))),
+      ],
+      fontSize: fontSize,
+      subtitleFontSize: subtitleFontSize,
     );
   }
 
   Widget _buildTodayCard(double fontSize, double subtitleFontSize) {
-    final screenSize = MediaQuery.of(context).size;
-    final padding = screenSize.width * 0.04;
     final today = _statisticsData?['today'] ?? {};
-
-    return Container(
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Today',
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: padding),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildTotalItem('frequency', '${today['frequency_day'] ?? 0}', subtitleFontSize),
-              _buildTotalItem('duration', _formatMinutes(today['duration_day'] ?? 0), subtitleFontSize),
-              _buildTotalItem('give up', '${today['given_up_day'] ?? 0}', subtitleFontSize),
-            ],
-          ),
-        ],
-      ),
+    return _buildStatsCard(
+      title: 'Today',
+      items: [
+        _StatItem('frequency', '${today['frequency_day'] ?? 0}'),
+        _StatItem('duration', _formatDuration(today['duration_day'] ?? 0)),
+        _StatItem('give up', '${today['given_up_day'] ?? 0}'),
+      ],
+      fontSize: fontSize,
+      subtitleFontSize: subtitleFontSize,
     );
   }
 
   Widget _buildDistributionCard(double fontSize, double subtitleFontSize) {
-    final screenSize = MediaQuery.of(context).size;
-    final padding = screenSize.width * 0.04;
-    final chartHeight = screenSize.height * 0.3;
+    final today = _statisticsData?['today'] ?? {};
+    final taskBreakdown = today['task_breakdown'] ?? {};
+    final durationDay = today['duration_day']?.toInt() ?? 0;
+
+    List<PieChartSectionData> sections = [];
+    final colors = [
+      Color(0xFFFFD6D6),
+      Color(0xFFBFDDBE),
+      Color(0xFFAED3EA),
+      Color(0xFFFFF3B0),
+      Color(0xFFD8BFD8),
+    ];
+
+    int colorIndex = 0;
+    taskBreakdown.forEach((taskName, percentage) {
+      final seconds = (durationDay * (percentage as double) / 100).round();
+      if (seconds > 0) {
+        sections.add(
+          PieChartSectionData(
+            color: colors[colorIndex % colors.length],
+            value: seconds.toDouble(),
+            title: '$taskName\n${_formatDuration(seconds)}',
+            radius: 28,
+            titleStyle: TextStyle(
+              fontSize: subtitleFontSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              height: 1.2
+            ),
+          ),
+        );
+        colorIndex++;
+      }
+    });
 
     return Container(
-      padding: EdgeInsets.all(padding),
+      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -236,7 +216,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               Row(
                 children: [
                   Text(
-                    '2025-04-03',
+                    today['date']?.toString() ?? '',
                     style: TextStyle(
                       fontSize: subtitleFontSize,
                       color: Colors.black54,
@@ -258,63 +238,86 @@ class _StatisticsPageState extends State<StatisticsPage> {
               ),
             ],
           ),
-          SizedBox(height: padding),
+          SizedBox(height: 20),
           SizedBox(
-            height: chartHeight,
-            child: PieChart(
-              PieChartData(
-                sections: [
-                  PieChartSectionData(
-                    color: Color(0xFFFFD6D6),
-                    value: 70,
-                    title: 'READING\n70 min',
-                    radius: chartHeight * 0.4,
-                    titleStyle: TextStyle(
-                      fontSize: subtitleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+            height: 200,
+            child: sections.isEmpty
+                ? Center(child: Text('No tasks today', style: TextStyle(
+                    fontSize: subtitleFontSize,
+                    color: Colors.black54)))
+                : PieChart(
+                    PieChartData(
+                      sections: sections,
+                      sectionsSpace: 0,
+                      centerSpaceRadius: 40,
+                      startDegreeOffset: -90,
                     ),
                   ),
-                  PieChartSectionData(
-                    color: Color(0xFFBFDDBE),
-                    value: 50,
-                    title: 'LISTENING\n50 min',
-                    radius: chartHeight * 0.4,
-                    titleStyle: TextStyle(
-                      fontSize: subtitleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  PieChartSectionData(
-                    color: Color(0xFFAED3EA),
-                    value: 30,
-                    title: 'WORDS\n30 min',
-                    radius: chartHeight * 0.4,
-                    titleStyle: TextStyle(
-                      fontSize: subtitleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-                sectionsSpace: 0,
-                centerSpaceRadius: 0,
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTimePeriodCard(double fontSize, double subtitleFontSize) {
-    final screenSize = MediaQuery.of(context).size;
-    final padding = screenSize.width * 0.04;
-    final chartHeight = screenSize.height * 0.3;
-
+  Widget _buildStatsCard({
+    required String title,
+    required List<_StatItem> items,
+    required double fontSize,
+    required double subtitleFontSize,
+  }) {
     return Container(
-      padding: EdgeInsets.all(padding),
+      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          )),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items.map((item) => _buildStatItem(
+              item.label, 
+              item.value, 
+              subtitleFontSize
+            )).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, double fontSize) {
+    return Column(
+      children: [
+        Text(label, 
+          style: TextStyle(fontSize: fontSize, color: Colors.black54),
+        ),
+        SizedBox(height: 4),
+        Text(value,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: fontSize * 1.2,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          )),
+      ],
+    );
+  }
+
+  Widget _buildTimePeriodCard(double fontSize, double subtitleFontSize) {
+    return Container(
+      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -362,9 +365,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
               ),
             ],
           ),
-          SizedBox(height: padding),
+          SizedBox(height: 20),
           SizedBox(
-            height: chartHeight,
+            height: 200,
             child: Center(
               child: Text(
                 '时间段分布图表将在这里显示',
@@ -379,39 +382,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
       ),
     );
   }
+}
 
-  Widget _buildTotalItem(String label, String value, double subtitleFontSize) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: subtitleFontSize,
-            color: Colors.black54,
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: subtitleFontSize * 1.2,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
+class _StatItem {
+  final String label;
+  final String value;
 
-  BoxDecoration _cardDecoration() {
-    return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
-      ),
-      borderRadius: BorderRadius.circular(20),
-    );
-  }
+  _StatItem(this.label, this.value);
 }

@@ -16,7 +16,7 @@ class ApiConfig {
   static String get modifyTaskUrl => '$baseUrl/tasks/modify';
   
   //数据相关
-  static String get getStatisticsUrl => '$baseUrl/stas';
+  static String get getStatisticsUrl => '$baseUrl/stats';
 
   // 学习室相关
   static String get createStudyRoomUrl => '$baseUrl/study_room/add';
