@@ -16,34 +16,21 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _saveUserInfo(int userId, String userName) async {
+  Future<void> _saveUserInfo(int userId, String userName, int? studyRoomId) async {
     final prefs = await SharedPreferences.getInstance();
-
-    
-
-
-
     await prefs.setInt('user_id', userId);
-    print('Saved userId: $userId');
     await prefs.setString('user_name', userName);
     
-    // 获取 study_room_id
-    final studyRoomId = prefs.getInt('study_room_id');
     if (studyRoomId != null) {
-      await prefs.setInt('study_room_id', studyRoomId);
+        await prefs.setInt('study_room_id', studyRoomId);
     } else {
-      await prefs.remove('study_room_id');
+        await prefs.remove('study_room_id');
     }
-
 
     print('正在保存用户信息:');
     print('user_id: $userId (类型: ${userId.runtimeType})');
     print('user_name: $userName (类型: ${userName.runtimeType})');
     print('study_room_id: $studyRoomId (类型: ${studyRoomId?.runtimeType})');
-
-
-
-
   }
 
   Future<void> _login() async {
@@ -75,7 +62,11 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200 && responseData['user_id'] != null) {
         // 登录成功
-        await _saveUserInfo(responseData['user_id'], responseData['user_name']);
+        await _saveUserInfo(
+          responseData['user_id'], 
+          responseData['user_name'],
+          responseData['study_room_id']
+        );
         
         setState(() {
           _isLoading = false;
