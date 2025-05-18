@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'study_room_detail.dart'; // 添加此行
+import 'study_room_detail.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/api_config.dart';
-class StudyRoomPage extends StatelessWidget {
+import 'todo_list_page.dart';
+import 'statistics_page.dart';
+import 'profile_page.dart';
+import '../main.dart';
+
+class StudyRoomPage extends GeneratorPage {
+  @override
+  _StudyRoomPageState createState() => _StudyRoomPageState();
+}
+
+class _StudyRoomPageState extends GeneratorPageState {
+  int _selectedIndex = 2; // 保持和GeneratorPage一致，2为Study Room
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,54 +92,53 @@ class StudyRoomPage extends StatelessWidget {
   }
 
   Widget _buildCircularButton({
-  required IconData icon,
-  required String label,
-  required Color color,
-  required VoidCallback onPressed, // 新增点击回调参数
-}) 
-  {
-  return Column(
-    children: [
-      GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Center( // 新增外层 Center 保证整体居中
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
-              children: [
-                Icon(icon, color: Colors.white, size: 32),
-                SizedBox(height: 8),
-                Text(
-                  label,
-                  textAlign: TextAlign.center, // 文本内容居中
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: onPressed,
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(icon, color: Colors.white, size: 32),
+                  SizedBox(height: 8),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   final TextStyle _appBarTitleStyle = TextStyle(
     color: Colors.black,

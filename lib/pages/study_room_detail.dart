@@ -16,28 +16,25 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-  leading: IconButton(
-    icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
-    onPressed: () => Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => StudyRoomPage()),
-    ),
-  ),
-  title: Text('Study Room', style: TextStyle(
-    color: Colors.white,
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-  )),
-  backgroundColor: Color(0xFFAED3EA),
-  elevation: 0,
-  centerTitle: true,
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 16.0),
-      child: Icon(Icons.settings, color: Colors.black, size: 28),
-    ),
-  ],
-),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text('Study Room', style: TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        )),
+        backgroundColor: Color(0xFFAED3EA),
+        elevation: 0,
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Icon(Icons.settings, color: Colors.black, size: 28),
+          ),
+        ],
+      ),
       // appBar: AppBar(
       //   title: Text('Study Room', style: TextStyle(
       //     color: Colors.white,
