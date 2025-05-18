@@ -74,7 +74,12 @@ class _StudyRoomPageState extends GeneratorPageState {
                       icon: Icons.home,
                       label: 'Join Room',
                       color: Color(0xFFAED3EA),
-                      onPressed: () {}, // 预留
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => _buildJoinRoomDialog(context),
+                        );
+                      },
                     ),
                   ],
                 ],
@@ -322,6 +327,93 @@ class _StudyRoomPageState extends GeneratorPageState {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJoinRoomDialog(BuildContext context) {
+    TextEditingController codeController = TextEditingController();
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Join Room', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            SizedBox(height: 24),
+            TextField(
+              controller: codeController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'Enter Room Code',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+            SizedBox(height: 32),
+            GestureDetector(
+              onTap: () async {
+                if (codeController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('please enter room code')),
+                  );
+                  return;
+                }
+                // 获取user_id
+                final prefs = await SharedPreferences.getInstance();
+                int? userId = prefs.getInt('user_id');
+                if (userId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('User not logged in')),
+                  );
+                  return;
+                }
+                // 发送POST请求
+                final response = await http.post(
+                  Uri.parse('http://10.252.88.70:8001/study_room/join'), // 替换为你的实际接口
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    'user_id': userId,
+                    'room_id': int.tryParse(codeController.text),
+                  }),
+                );
+                if (response.statusCode == 200) {
+                  try {
+                    final data = jsonDecode(response.body);
+                    if (data['room_id'] != null) {
+                      await prefs.setInt('study_room_id', data['room_id']);
+                      await prefs.setString('room_name', data['room_name']);
+                      await prefs.setString('room_description', data['room_description']);
+                      Navigator.of(context).pop(); // 关闭Dialog
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('please enter correct room code')),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('please enter correct room code')),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('please enter correct room code')),
+                  );
+                }
+              },
+              child: Text('Join', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
       ),
     );
