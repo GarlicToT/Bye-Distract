@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'study_room_detail.dart'; // 添加此行
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../config/api_config.dart';
 
 class StudyRoomPage extends StatelessWidget {
   @override
@@ -48,7 +51,12 @@ class StudyRoomPage extends StatelessWidget {
                       icon: Icons.add,
                       label: 'Create Room',
                       color: Color(0xFFFFD6D6),
-                      onPressed: () {}, // 预留
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => _buildCreateRoomDialog(context),
+                        );
+                      },
                     ),
                     SizedBox(height: 40),
                     _buildCircularButton(
@@ -127,4 +135,262 @@ class StudyRoomPage extends StatelessWidget {
     fontSize: 20,
     fontWeight: FontWeight.w500,
   );
+
+  Widget _buildCreateRoomDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController descController = TextEditingController();
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.all(0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0xFFAED3EA),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'Create Study Room',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Room Name', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+                    SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          hintText: 'Please enter...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    Text('Room Description', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+                    SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: descController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Please enter...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Text('cancel', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            // 校验输入
+                            if (nameController.text.trim().isEmpty || descController.text.trim().isEmpty) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Hint'),
+                                  content: Text('Please fill in the room name and description.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: Text('Yes'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return;
+                            }
+                            // 获取user_id
+                            final prefs = await SharedPreferences.getInstance();
+                            final userId = prefs.getInt('user_id');
+                            if (userId == null) {
+                              Navigator.of(context).pop();
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('错误'),
+                                  content: Text('未获取到用户ID，请重新登录'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: Text('确定'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return;
+                            }
+                            // 发送POST请求
+                            Navigator.of(context).pop(); // 先关闭创建弹窗
+                            final url = Uri.parse(ApiConfig.createStudyRoomUrl);
+                            final body = {
+                              'user_id': userId,
+                              'room_name': nameController.text.trim(),
+                              'room_description': descController.text.trim(),
+                            };
+                            try {
+                              final response = await http.post(
+                                url,
+                                headers: {'Content-Type': 'application/json'},
+                                body: jsonEncode(body),
+                              );
+                              if (response.statusCode == 200 || response.statusCode == 201) {
+                                final data = jsonDecode(response.body);
+                                // 保存返回信息
+                                await prefs.setInt('creator_id', data['creator_id']);
+                                await prefs.setString('room_name', data['room_name']);
+                                await prefs.setString('room_description', data['room_description']);
+                                await prefs.setInt('room_id', data['room_id']);
+                                // 弹出成功提示框
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) => _buildSuccessDialog(context),
+                                );
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('创建失败'),
+                                    content: Text('服务器返回错误: ${response.body}'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        child: Text('确定'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('网络错误'),
+                                  content: Text('无法连接服务器: $e'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: Text('确定'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                          child: Text('Create', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuccessDialog(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: EdgeInsets.all(0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 32),
+            Icon(Icons.celebration, size: 72, color: Colors.black),
+            SizedBox(height: 16),
+            Text('Room created\nsuccessfully!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 32),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                  border: Border(top: BorderSide(color: Colors.grey.shade300, width: 2)),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text('Enter the room.', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
