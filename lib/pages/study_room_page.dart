@@ -381,7 +381,7 @@ class _StudyRoomPageState extends GeneratorPageState {
                 }
                 // 发送POST请求
                 final response = await http.post(
-                  Uri.parse('http://10.252.88.70:8001/study_room/join'), // 替换为你的实际接口
+                  Uri.parse('${ApiConfig.baseUrl}/study_room/join'),
                   headers: {'Content-Type': 'application/json'},
                   body: jsonEncode({
                     'user_id': userId,
@@ -460,7 +460,7 @@ class _StudyRoomPageState extends GeneratorPageState {
                       return;
                     }
                     final response = await http.post(
-                      Uri.parse('http://10.252.88.70:8001/study_room/leave'),
+                      Uri.parse(ApiConfig.leaveStudyRoomUrl),
                       headers: {'Content-Type': 'application/json'},
                       body: jsonEncode({
                         'user_id': userId,
