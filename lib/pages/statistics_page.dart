@@ -188,7 +188,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             color: colors[colorIndex % colors.length],
             value: seconds.toDouble(),
             title: '$taskName\n${_formatDuration(seconds)}',
-            radius: 28,
+            radius: 110,
             titleStyle: TextStyle(
               fontSize: subtitleFontSize,
               fontWeight: FontWeight.bold,
@@ -252,7 +252,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ),
           SizedBox(height: 20),
           SizedBox(
-            height: 200,
+            height: 300,
             child: sections.isEmpty
                 ? Center(child: Text('No tasks today', style: TextStyle(
                     fontSize: subtitleFontSize,

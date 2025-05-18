@@ -4,7 +4,6 @@ import 'study_room_detail.dart'; // 添加此行
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/api_config.dart';
-
 class StudyRoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -234,101 +233,74 @@ class StudyRoomPage extends StatelessWidget {
                           child: Text('cancel', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                         ),
                         GestureDetector(
-                          onTap: () async {
-                            // 校验输入
-                            if (nameController.text.trim().isEmpty || descController.text.trim().isEmpty) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('Hint'),
-                                  content: Text('Please fill in the room name and description.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(),
-                                      child: Text('Yes'),
-                                    ),
-                                  ],
-                                ),
+                          onTap: () {
+                            if (nameController.text.isEmpty || descController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Please fill in all fields')),
                               );
                               return;
                             }
-                            // 获取user_id
-                            final prefs = await SharedPreferences.getInstance();
-                            final userId = prefs.getInt('user_id');
-                            if (userId == null) {
-                              Navigator.of(context).pop();
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('错误'),
-                                  content: Text('未获取到用户ID，请重新登录'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(),
-                                      child: Text('确定'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              return;
-                            }
-                            // 发送POST请求
-                            Navigator.of(context).pop(); // 先关闭创建弹窗
-                            final url = Uri.parse(ApiConfig.createStudyRoomUrl);
-                            final body = {
-                              'user_id': userId,
-                              'room_name': nameController.text.trim(),
-                              'room_description': descController.text.trim(),
-                            };
-                            try {
-                              final response = await http.post(
-                                url,
-                                headers: {'Content-Type': 'application/json'},
-                                body: jsonEncode(body),
-                              );
-                              if (response.statusCode == 200 || response.statusCode == 201) {
-                                final data = jsonDecode(response.body);
-                                // 保存返回信息
-                                await prefs.setInt('creator_id', data['creator_id']);
-                                await prefs.setString('room_name', data['room_name']);
-                                await prefs.setString('room_description', data['room_description']);
-                                await prefs.setInt('room_id', data['room_id']);
-                                // 弹出成功提示框
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (context) => _buildSuccessDialog(context),
+                            // 获取当前登录用户的user_id
+                            SharedPreferences.getInstance().then((prefs) {
+                              int? userId = prefs.getInt('user_id');
+                              if (userId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('User ID not found')),
                                 );
-                              } else {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text('创建失败'),
-                                    content: Text('服务器返回错误: ${response.body}'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(),
-                                        child: Text('确定'),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                return;
                               }
-                            } catch (e) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('网络错误'),
-                                  content: Text('无法连接服务器: $e'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(),
-                                      child: Text('确定'),
+                              // 发送POST请求
+                              http.post(
+                                Uri.parse(ApiConfig.createStudyRoomUrl), // 使用 ApiConfig 的配置 // 替换为实际的后端URL
+                                headers: {'Content-Type': 'application/json'},
+                                body: jsonEncode({
+                                  'user_id': userId,
+                                  'room_name': nameController.text,
+                                  'room_description': descController.text,
+                                }),
+                              ).then((response) {
+                                if (response.statusCode == 200) {
+                                  final responseData = jsonDecode(response.body);
+                                  // 保存返回数据
+                                  prefs.setInt('creator_id', responseData['creator_id']);
+                                  prefs.setString('room_name', responseData['room_name']);
+                                  prefs.setString('room_description', responseData['room_description']);
+                                  prefs.setInt('room_id', responseData['room_id']);
+                                  // 更新study_room_id
+                                  prefs.setInt('study_room_id', responseData['room_id']);
+                                  // 关闭创建房间对话框
+                                  Navigator.of(context).pop();
+                                  // 弹出成功提示框
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Success'),
+                                      content: Text('Room created successfully!'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
+                                            );
+                                          },
+                                          child: Text('Enter the room'),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              );
-                            }
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to create room')),
+                                  );
+                                }
+                              }).catchError((error) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $error')),
+                                );
+                              });
+                            });
                           },
                           child: Text('Create', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                         ),
@@ -339,56 +311,6 @@ class StudyRoomPage extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSuccessDialog(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        padding: EdgeInsets.all(0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: 32),
-            Icon(Icons.celebration, size: 72, color: Colors.black),
-            SizedBox(height: 16),
-            Text('Room created\nsuccessfully!',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 32),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                  border: Border(top: BorderSide(color: Colors.grey.shade300, width: 2)),
-                ),
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: Text('Enter the room.', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -18,7 +18,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       appBar: AppBar(
   leading: IconButton(
     icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
-    onPressed: () => Navigator.pop(context),
+    onPressed: () => Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => StudyRoomPage()),
+    ),
   ),
   title: Text('Study Room', style: TextStyle(
     color: Colors.white,
@@ -54,27 +57,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Color(0xFFAED3EA),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: Text(
-                  'Study Room',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
               child: Column(
@@ -118,52 +101,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           ],
         ),
       ),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   currentIndex: _selectedIndex,
-      //   selectedItemColor: Colors.blue,
-      //   unselectedItemColor: Colors.grey,
-      //   type: BottomNavigationBarType.fixed,
-      //   backgroundColor: Colors.white,
-      //   elevation: 8,
-      //   onTap: (index) {
-      //     setState(() {
-      //       _selectedIndex = index;
-      //     });
-      //     // 跳转逻辑与GeneratorPage一致
-      //     switch (index) {
-      //       case 0:
-      //         Navigator.pushReplacementNamed(context, '/');
-      //         break;
-      //       case 1:
-      //         Navigator.pushReplacementNamed(context, '/statistics');
-      //         break;
-      //       case 2:
-      //         Navigator.pushReplacementNamed(context, '/studyroom');
-      //         break;
-      //       case 3:
-      //         Navigator.pushReplacementNamed(context, '/profile');
-      //         break;
-      //     }
-      //   },
-      //   items: [
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.format_list_bulleted),
-      //       label: 'To-do List',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.access_time),
-      //       label: 'Statistics',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.meeting_room),
-      //       label: 'Study Room',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.person_outline),
-      //       label: 'Me',
-      //     ),
-      //   ],
-      // ),
+      
     );
   }
 
