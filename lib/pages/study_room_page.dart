@@ -63,33 +63,36 @@ class StudyRoomPage extends StatelessWidget {
   }
 
   Widget _buildCircularButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
+  required IconData icon,
+  required String label,
+  required Color color,
+}) {
+  return Column(
+    children: [
+      Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center( // 新增外层 Center 保证整体居中
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
             children: [
               Icon(icon, color: Colors.white, size: 32),
               SizedBox(height: 8),
               Text(
                 label,
+                textAlign: TextAlign.center, // 文本内容居中
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -99,9 +102,10 @@ class StudyRoomPage extends StatelessWidget {
             ],
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   final TextStyle _appBarTitleStyle = TextStyle(
     color: Colors.black,
