@@ -9,7 +9,24 @@ class StudyRoomDetailPage extends StatefulWidget {
 }
 
 class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
-  // int _selectedIndex = 2; // 保持和GeneratorPage一致，2为Study Room
+  String roomName = '';
+  String roomDescription = '';
+  String roomId = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRoomInfo();
+  }
+
+  Future<void> _loadRoomInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      roomName = prefs.getString('room_name') ?? '';
+      roomDescription = prefs.getString('room_description') ?? '';
+      roomId = prefs.getInt('room_id')?.toString() ?? '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,26 +52,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           ),
         ],
       ),
-      // appBar: AppBar(
-      //   title: Text('Study Room', style: TextStyle(
-      //     color: Colors.white,
-      //     fontSize: 24,
-      //     fontWeight: FontWeight.bold,
-      //   )),
-      //   backgroundColor: Color(0xFFAED3EA),
-      //   elevation: 0,
-      //   centerTitle: true,
-      //   actions: [
-      //     Padding(
-      //       padding: const EdgeInsets.only(right: 16.0),
-      //       child: Icon(Icons.settings, color: Colors.black, size: 28),
-      //     ),
-      //   ],
-      // ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
               child: Column(
@@ -62,7 +62,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                 children: [
                   Row(
                     children: [
-                      Text('Beta', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                      Text(roomName, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                       SizedBox(width: 12),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -75,9 +75,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                     ],
                   ),
                   SizedBox(height: 4),
-                  Text('(Room Code: 123456)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  Text('(Room Code: $roomId)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   SizedBox(height: 4),
-                  Text('Fighting', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                  Text(roomDescription, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
                   SizedBox(height: 12),
                   Row(
                     children: [
@@ -98,7 +98,6 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           ],
         ),
       ),
-      
     );
   }
 
