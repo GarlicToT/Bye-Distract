@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudyRoomPage extends StatelessWidget {
   @override
@@ -11,25 +12,54 @@ class StudyRoomPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildCircularButton(
-              icon: Icons.add,
-              label: 'Create Room',
-              color: Color(0xFFFFD6D6),
-            ),
-            SizedBox(height: 40),
-            _buildCircularButton(
-              icon: Icons.home,
-              label: 'Join Room',
-              color: Color(0xFFAED3EA),
-            ),
-          ],
-        ),
+      body: FutureBuilder<int?>(
+        future: _getStudyRoomId(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else {
+            final hasStudyRoom = snapshot.hasData && snapshot.data != null;
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (hasStudyRoom) ...[
+                    _buildCircularButton(
+                      icon: Icons.visibility,
+                      label: 'View My Room',
+                      color: Color(0xFFFFD6D6),
+                    ),
+                    SizedBox(height: 40),
+                    _buildCircularButton(
+                      icon: Icons.exit_to_app,
+                      label: 'Leave My Room',
+                      color: Color(0xFFAED3EA),
+                    ),
+                  ] else ...[
+                    _buildCircularButton(
+                      icon: Icons.add,
+                      label: 'Create Room',
+                      color: Color(0xFFFFD6D6),
+                    ),
+                    SizedBox(height: 40),
+                    _buildCircularButton(
+                      icon: Icons.home,
+                      label: 'Join Room',
+                      color: Color(0xFFAED3EA),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }
+        },
       ),
     );
+  }
+
+  Future<int?> _getStudyRoomId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('study_room_id');
   }
 
   Widget _buildCircularButton({

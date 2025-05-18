@@ -31,37 +31,49 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Future<void> _fetchStatistics() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('user_id');
-      if (userId == null) {
-        print('User ID not found');
-        return;
-      }
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId == null) {
+      print('User ID not found');
+      return;
+    }
 
-      // final response = await http.get(
-      //   Uri.parse('${ApiConfig.baseUrl}/stas/$userId'),
-      // );
-      final response = await http.get(Uri.parse('${ApiConfig.getStatisticsUrl}/$userId'));
+    // 构建请求 URL 并打印
+    final requestUrl = Uri.parse('${ApiConfig.getStatisticsUrl}/$userId');
+    print('🌐 Sending GET request to: $requestUrl');
 
-      if (response.statusCode == 200) {
-        setState(() {
-          _statisticsData = jsonDecode(response.body);
-          _isLoading = false;
-        });
-      } else {
-        print('Failed to load statistics: ${response.statusCode}');
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error fetching statistics: $e');
+    final response = await http.get(requestUrl);
+
+    // 打印响应基本信息
+    print('🔍 Response status: ${response.statusCode}');
+    print('📦 Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      // 解码并打印结构化数据
+      final decodedData = jsonDecode(response.body);
+      print('✅ Decoded response data: $decodedData');
+
+      setState(() {
+        _statisticsData = decodedData;
+        _isLoading = false;
+      });
+    } else {
+      // 打印错误详情
+      print('❌ Failed to load statistics: ${response.statusCode}');
+      print('❗ Error details: ${response.body}');
       setState(() {
         _isLoading = false;
       });
     }
+  } catch (e) {
+    // 打印异常信息
+    print('⛔ Error fetching statistics: $e');
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   String _formatDuration(int seconds) {
     if (seconds < 60) {
@@ -249,7 +261,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     PieChartData(
                       sections: sections,
                       sectionsSpace: 0,
-                      centerSpaceRadius: 40,
+                      centerSpaceRadius: 0,
                       startDegreeOffset: -90,
                     ),
                   ),
