@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import 'study_room_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StudyRoomDetailPage extends StatefulWidget {
   @override
@@ -12,6 +14,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
   String roomName = '';
   String roomDescription = '';
   String roomId = '';
+  List<dynamic> leaderboard = [];
+  Map<String, dynamic>? currentUser;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -26,6 +31,42 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       roomDescription = prefs.getString('room_description') ?? '';
       roomId = prefs.getInt('room_id')?.toString() ?? '';
     });
+    await _fetchLeaderboard();
+  }
+
+  Future<void> _fetchLeaderboard() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      final studyRoomId = prefs.getInt('study_room_id');
+
+      if (userId == null || studyRoomId == null) {
+        print('User ID or Study Room ID not found');
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('http://10.252.88.70:8001/study_room/$studyRoomId/$userId/leaderboard'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          leaderboard = data['leaderboard'];
+          currentUser = data['current_user'];
+          isLoading = false;
+        });
+      } else {
+        print('Failed to fetch leaderboard: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching leaderboard: $e');
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = (seconds / 60).floor();
+    return '$minutes';
   }
 
   @override
@@ -52,56 +93,58 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(roomName, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 12),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFFFE6A0),
-                          borderRadius: BorderRadius.circular(6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(roomName, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                            SizedBox(width: 12),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFFFE6A0),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text('${leaderboard.length} persons', style: TextStyle(color: Color(0xFFB88A00), fontWeight: FontWeight.bold, fontSize: 14)),
+                            ),
+                          ],
                         ),
-                        child: Text('2 persons', style: TextStyle(color: Color(0xFFB88A00), fontWeight: FontWeight.bold, fontSize: 14)),
-                      ),
-                    ],
+                        SizedBox(height: 4),
+                        Text('(Room Code: $roomId)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                        SizedBox(height: 4),
+                        Text(roomDescription, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                        SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text('${leaderboard.where((user) => user['duration'] > 0).length}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                            SizedBox(width: 4),
+                            Text('Focusing', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                            SizedBox(width: 24),
+                            Text('${currentUser?['rank'] ?? 0}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                            SizedBox(width: 4),
+                            Text('Your Rank', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        ...leaderboard.map((user) => _buildUserCard(user)).toList(),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 4),
-                  Text('(Room Code: $roomId)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                  SizedBox(height: 4),
-                  Text(roomDescription, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Text('0', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 4),
-                      Text('Focusing', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-                      SizedBox(width: 24),
-                      Text('1', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 4),
-                      Text('Your Rank', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  _buildUserCard(),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildUserCard() {
+  Widget _buildUserCard(Map<String, dynamic> user) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 8),
@@ -122,7 +165,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         children: [
           Column(
             children: [
-              Text('1', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              Text('${user['rank']}', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Container(
                 width: 48,
@@ -140,9 +183,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Tata', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                Text(user['name'], style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 SizedBox(height: 4),
-                Text('Focused Today: 0 min', style: TextStyle(fontSize: 16)),
+                Text('Focused Today: ${_formatDuration(user['duration'])} min', style: TextStyle(fontSize: 16)),
                 SizedBox(height: 8),
                 Row(
                   children: [
@@ -171,7 +214,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           SizedBox(width: 8),
           Column(
             children: [
-              Text('0', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+              Text(_formatDuration(user['duration']), style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.grey[700])),
               Text('min', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
             ],
           ),
