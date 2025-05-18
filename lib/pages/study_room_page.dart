@@ -55,7 +55,12 @@ class _StudyRoomPageState extends GeneratorPageState {
                       icon: Icons.exit_to_app,
                       label: 'Leave My Room',
                       color: Color(0xFFAED3EA),
-                      onPressed: () {}, // 预留
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => _buildLeaveRoomDialog(context),
+                        );
+                      },
                     ),
                   ] else ...[
                     _buildCircularButton(
@@ -412,6 +417,72 @@ class _StudyRoomPageState extends GeneratorPageState {
                 }
               },
               child: Text('Join', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeaveRoomDialog(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Are you sure you want to leave this study room?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('No', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    int? userId = prefs.getInt('user_id');
+                    int? roomId = prefs.getInt('study_room_id');
+                    if (userId == null || roomId == null) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('User or room info not found')),
+                      );
+                      return;
+                    }
+                    final response = await http.post(
+                      Uri.parse('http://10.252.88.70:8001/study_room/leave'),
+                      headers: {'Content-Type': 'application/json'},
+                      body: jsonEncode({
+                        'user_id': userId,
+                        'room_id': roomId,
+                      }),
+                    );
+                    if (response.statusCode == 200) {
+                      await prefs.remove('study_room_id');
+                      await prefs.remove('room_name');
+                      await prefs.remove('room_description');
+                      Navigator.of(context).pop();
+                      setState(() {}); // 刷新页面
+                    } else {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to leave room')),
+                      );
+                    }
+                  },
+                  child: Text('Yes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ],
         ),
