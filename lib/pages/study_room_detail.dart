@@ -4,6 +4,7 @@ import '../main.dart';
 import 'study_room_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class StudyRoomDetailPage extends StatefulWidget {
   @override
@@ -46,7 +47,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.252.88.70:8001/study_room/$studyRoomId/$userId/leaderboard'),
+        Uri.parse(ApiConfig.leaderboardStudyRoomUrl(studyRoomId, userId)),
       );
 
       if (response.statusCode == 200) {

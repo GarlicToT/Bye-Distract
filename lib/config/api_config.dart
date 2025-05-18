@@ -21,4 +21,6 @@ class ApiConfig {
   // 学习室相关
   static String get createStudyRoomUrl => '$baseUrl/study_room/add';
   static String get leaveStudyRoomUrl => '$baseUrl/study_room/leave';
+  static String get joinStudyRoomUrl => '$baseUrl/study_room/join';
+  static String leaderboardStudyRoomUrl(int roomId, int userId) => '$baseUrl/study_room/$roomId/$userId/leaderboard';
 } 
