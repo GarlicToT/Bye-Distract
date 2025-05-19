@@ -36,8 +36,13 @@ class _CountupPageState extends State<CountupPage> {
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
     
+    final frontCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.front,
+      orElse: () => cameras.first,
+    );
+    
     _cameraController = CameraController(
-      cameras.first,
+      frontCamera,
       ResolutionPreset.medium,
       enableAudio: true,
     );

@@ -40,8 +40,14 @@ class _CountdownPageState extends State<CountdownPage> {
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
     
+    // 找到前置摄像头
+    final frontCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.front,
+      orElse: () => cameras.first,
+    );
+    
     _cameraController = CameraController(
-      cameras.first,
+      frontCamera,
       ResolutionPreset.medium,
       enableAudio: true,
     );
