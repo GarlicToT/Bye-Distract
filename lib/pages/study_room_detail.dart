@@ -19,6 +19,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
   Map<String, dynamic>? currentUser;
   bool isLoading = true;
   int? currentUserId;
+  Map<String, String?> userAvatars = {};
 
   @override
   void initState() {
@@ -65,8 +66,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         // 批量获取头像
         try {
           final avatarResponse = await http.post(
-            Uri.parse(ApiConfig.getAvatarUrl),
-            body: {'user_ids': userIds},
+            Uri.parse('${ApiConfig.getAvatarUrl}/?user_ids=$userIds'),
+            headers: {
+              'accept': 'application/json',
+            },
           );
           print('头像请求状态码: ${avatarResponse.statusCode}');
           print('头像响应数据: ${avatarResponse.body}');
@@ -74,14 +77,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           if (avatarResponse.statusCode == 200) {
             final avatarData = jsonDecode(avatarResponse.body);
             if (avatarData['status'] == 'success') {
-              final Map<String, dynamic> avatarUrls = avatarData['data'];
-              
-              // 为每个用户设置头像URL
-              for (var user in leaderboardData) {
-                final userId = user['user_id'].toString();
-                user['avatar_url'] = avatarUrls[userId];
-                print('用户 $userId 的头像URL: ${user['avatar_url']}');
-              }
+              setState(() {
+                userAvatars = Map<String, String?>.from(avatarData['data']);
+              });
+              print('成功获取用户头像数据');
             }
           } else {
             print('获取头像失败: ${avatarResponse.statusCode}');
@@ -186,6 +185,8 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
 
   Widget _buildUserCard(Map<String, dynamic> user) {
     final bool isCurrentUser = user['user_id'] == currentUserId;
+    final String userId = user['user_id'].toString();
+    final String? avatarUrl = userAvatars[userId];
     
     return Container(
       width: double.infinity,
@@ -216,10 +217,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                   color: Colors.grey[200],
                   shape: BoxShape.circle,
                 ),
-                child: user['avatar_url'] != null
+                child: avatarUrl != null
                     ? ClipOval(
                         child: Image.network(
-                          user['avatar_url'],
+                          avatarUrl,
                           width: 48,
                           height: 48,
                           fit: BoxFit.cover,
