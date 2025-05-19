@@ -120,17 +120,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _fetchStatistics,
-              child: ListView(
-                padding: EdgeInsets.all(padding),
-                children: [
-                  _buildTotalCard(fontSize, subtitleFontSize),
-                  SizedBox(height: padding),
-                  _buildTodayCard(fontSize, subtitleFontSize),
-                  SizedBox(height: padding),
-                  _buildDistributionCard(fontSize, subtitleFontSize),
-                  SizedBox(height: padding),
-                  _buildTimePeriodCard(fontSize, subtitleFontSize),
-                ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.5),
+                child: Column(
+                  children: [
+                    _buildTotalCard(fontSize, subtitleFontSize),
+                    SizedBox(height: padding),
+                    _buildTodayCard(fontSize, subtitleFontSize),
+                    SizedBox(height: padding),
+                    _buildDistributionCard(fontSize, subtitleFontSize),
+                    SizedBox(height: padding),
+                    _buildTimePeriodCard(fontSize, subtitleFontSize),
+                    SizedBox(height: padding), // 底部额外padding
+                  ],
+                ),
               ),
             ),
     );
@@ -251,8 +254,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
             ],
           ),
           SizedBox(height: 20),
-          SizedBox(
-            height: 300,
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.4,
+              minHeight: 200,
+            ),
             child: sections.isEmpty
                 ? Center(child: Text('No tasks today', style: TextStyle(
                     fontSize: subtitleFontSize,
@@ -328,6 +334,31 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildTimePeriodCard(double fontSize, double subtitleFontSize) {
+    final tasks = _statisticsData?['tasks'] as List<dynamic>? ?? [];
+    
+    // 对任务按focus_ratio排序并只取前5个
+    final sortedTasks = List<Map<String, dynamic>>.from(tasks)
+      ..sort((a, b) => (b['focus_ratio'] as num).compareTo(a['focus_ratio'] as num));
+    final topTasks = sortedTasks.take(5).toList();
+    
+    // 准备柱状图数据
+    final barGroups = topTasks.asMap().entries.map((entry) {
+      final task = entry.value;
+      final focusRatio = (task['focus_ratio'] as num?)?.toDouble() ?? 0.0;
+      
+      return BarChartGroupData(
+        x: entry.key,
+        barRods: [
+          BarChartRodData(
+            toY: focusRatio,
+            color: Color(0xFFFF9E9E),
+            width: 20,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
+          ),
+        ],
+      );
+    }).toList();
+
     return Container(
       padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
       decoration: BoxDecoration(
@@ -345,50 +376,109 @@ class _StatisticsPageState extends State<StatisticsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Time period distribution',
+                'Task focus ratio distribution (Top 5)',
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    '2025-04-03',
-                    style: TextStyle(
-                      fontSize: subtitleFontSize,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.chevron_left, color: Colors.black54),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.chevron_right, color: Colors.black54),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ],
           ),
           SizedBox(height: 20),
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: Text(
-                '时间段分布图表将在这里显示',
-                style: TextStyle(
-                  fontSize: subtitleFontSize,
-                  color: Colors.black54
-                ),
-              ),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.4,
+              minHeight: 200,
             ),
+            child: tasks.isEmpty
+                ? Center(
+                    child: Text(
+                      'No task data',
+                      style: TextStyle(
+                        fontSize: subtitleFontSize,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  )
+                : BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: 1,
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipBgColor: Colors.black87,
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final task = topTasks[group.x.toInt()];
+                            return BarTooltipItem(
+                              '${task['title']}\nfocus ratio: ${(rod.toY * 100).toStringAsFixed(1)}%',
+                              TextStyle(color: Colors.white),
+                            );
+                          },
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              if (value >= 0 && value < topTasks.length) {
+                                final task = topTasks[value.toInt()];
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    task['title'],
+                                    style: TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return Text('');
+                            },
+                            reservedSize: 30,
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                '${(value * 100).toInt()}%',
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 12,
+                                ),
+                              );
+                            },
+                            reservedSize: 40,
+                          ),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      gridData: FlGridData(
+                        show: true,
+                        horizontalInterval: 0.2,
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.black12,
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
+                      barGroups: barGroups,
+                    ),
+                  ),
           ),
         ],
       ),

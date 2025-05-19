@@ -596,8 +596,8 @@ class _TodoListPageState extends State<TodoListPage> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('训练专注模型'),
-              content: Text('这个任务用于训练您的专注模型。请上传一段您在专注状态下的视频。'),
+              title: Text('Train Your Focus Model'),
+              content: Text('This task is used to train your focus model. Please upload a video of you in a focused state.'),
               actions: <Widget>[
                 TextButton(
                   child: Text('No'),

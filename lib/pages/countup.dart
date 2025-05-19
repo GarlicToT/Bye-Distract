@@ -30,8 +30,7 @@ class _CountupPageState extends State<CountupPage> {
   @override
   void initState() {
     super.initState();
-    _startTimer();
-    _initializeCamera();
+    // 初始化时不自动开始计时和初始化摄像头
   }
 
   Future<void> _initializeCamera() async {
@@ -53,8 +52,28 @@ class _CountupPageState extends State<CountupPage> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _startRecording() async {
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      try {
+        final directory = await getTemporaryDirectory();
+        _videoPath = '${directory.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+        await _cameraController!.startVideoRecording();
+        setState(() {
+          _isRecording = true;
+        });
+        print('开始录制视频');
+      } catch (e) {
+        print('开始录制时出错: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('开始录制时出错：$e')),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _showCameraDialog() async {
-    _timer?.cancel();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -66,6 +85,7 @@ class _CountupPageState extends State<CountupPage> {
               child: Text('No'),
               onPressed: () {
                 Navigator.of(context).pop();
+                // 用户选择不开启摄像头时，只开始计时
                 _startTimer();
               },
             ),
@@ -73,15 +93,10 @@ class _CountupPageState extends State<CountupPage> {
               child: Text('Yes'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                if (_cameraController != null && _cameraController!.value.isInitialized) {
-                  final directory = await getTemporaryDirectory();
-                  _videoPath = '${directory.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
-                  await _cameraController!.startVideoRecording();
-                  setState(() {
-                    _isRecording = true;
-                  });
-                }
+                // 用户选择开启摄像头时，初始化摄像头并开始计时和录制
+                await _initializeCamera();
                 _startTimer();
+                await _startRecording();
               },
             ),
           ],
@@ -174,46 +189,55 @@ class _CountupPageState extends State<CountupPage> {
                   print('未找到用户ID');
                   return;
                 }
+                print('准备上传视频，用户ID: $userId, 任务ID: ${widget.taskId}');
 
                 final file = File(_videoPath!);
                 if (!await file.exists()) {
-                  print('视频文件不存在');
+                  print('视频文件不存在: $_videoPath');
                   return;
                 }
+                print('视频文件存在，大小: ${await file.length()} 字节');
 
-                print('开始上传任务视频');
-                final request = http.MultipartRequest(
-                  'POST',
-                  Uri.parse('${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}')
-                );
+                // 构建上传URL，将user_id和task_id作为URL参数
+                final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
+                print('开始上传任务视频到: $uploadUrl');
 
+                // 创建multipart请求
+                final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
+                
                 // 添加视频文件
                 final videoFile = await http.MultipartFile.fromPath(
-                  'video',
+                  'video',  // 确保这里的字段名与后端期望的一致
                   file.path,
                   contentType: MediaType('video', 'mp4'),
                 );
                 request.files.add(videoFile);
 
-                print('发送上传请求');
+                print('发送上传请求...');
                 final streamedResponse = await request.send();
-                final response = await http.Response.fromStream(streamedResponse);
-                print('上传响应状态码: ${response.statusCode}');
-                print('上传响应体: ${response.body}');
+                print('收到响应，状态码: ${streamedResponse.statusCode}');
                 
-                // 打印后端返回的详细内容
-                try {
-                  final responseData = jsonDecode(response.body);
-                  print('视频上传后端返回数据:');
-                  print('状态: ${responseData['status'] ?? '未知'}');
-                  print('消息: ${responseData['message'] ?? '无消息'}');
-                  print('数据: ${responseData['data'] ?? '无数据'}');
-                } catch (e) {
-                  print('解析响应数据时出错: $e');
-                  print('原始响应内容: ${response.body}');
+                final response = await http.Response.fromStream(streamedResponse);
+                print('完整响应体: ${response.body}');
+                
+                if (response.statusCode == 200) {
+                  print('视频上传成功！');
+                  try {
+                    final responseData = jsonDecode(response.body);
+                    print('视频上传后端返回数据:');
+                    print('状态: ${responseData['status'] ?? '未知'}');
+                    print('专注比例: ${responseData['focus_ratio'] ?? '未知'}');
+                    print('视频URL: ${responseData['video_url'] ?? '未知'}');
+                  } catch (e) {
+                    print('解析响应数据时出错: $e');
+                  }
+                } else {
+                  print('视频上传失败，状态码: ${response.statusCode}');
+                  print('错误详情: ${response.body}');
                 }
               } catch (e) {
                 print('上传视频时出错: $e');
+                print('错误堆栈: ${StackTrace.current}');
               }
             }
 
