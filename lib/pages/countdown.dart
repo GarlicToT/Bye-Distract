@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+// import '../config/api_config.dart';
 
 class CountdownPage extends StatefulWidget {
   final String taskTitle;
   final int initialSeconds;
   final int taskId;
+  final bool isTrainingTask;
 
-  const CountdownPage({Key? key, required this.taskTitle, required this.initialSeconds, required this.taskId}) : super(key: key);
+  const CountdownPage({
+    Key? key, 
+    required this.taskTitle, 
+    required this.initialSeconds, 
+    required this.taskId,
+    this.isTrainingTask = false,
+  }) : super(key: key);
 
   @override
   State<CountdownPage> createState() => _CountdownPageState();
@@ -40,7 +49,6 @@ class _CountdownPageState extends State<CountdownPage> {
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
     
-    // 找到前置摄像头
     final frontCamera = cameras.firstWhere(
       (camera) => camera.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
@@ -53,7 +61,34 @@ class _CountdownPageState extends State<CountdownPage> {
     );
     
     await _cameraController!.initialize();
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      // 只有训练任务才自动开始录制
+      if (widget.isTrainingTask) {
+        _startRecording();
+      }
+    }
+  }
+
+  Future<void> _startRecording() async {
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      try {
+        final directory = await getTemporaryDirectory();
+        _videoPath = '${directory.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+        await _cameraController!.startVideoRecording();
+        setState(() {
+          _isRecording = true;
+        });
+        print('开始录制视频');
+      } catch (e) {
+        print('开始录制时出错: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('开始录制时出错：$e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _showCameraDialog() async {
@@ -76,14 +111,7 @@ class _CountdownPageState extends State<CountdownPage> {
               child: Text('Yes'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                if (_cameraController != null && _cameraController!.value.isInitialized) {
-                  final directory = await getTemporaryDirectory();
-                  _videoPath = '${directory.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
-                  await _cameraController!.startVideoRecording();
-                  setState(() {
-                    _isRecording = true;
-                  });
-                }
+                await _startRecording();
                 _startTimer();
               },
             ),
@@ -100,58 +128,191 @@ class _CountdownPageState extends State<CountdownPage> {
         _isRecording = false;
         _videoPath = video.path;
       });
-      // 这里可以添加保存视频路径到本地存储或服务器的逻辑
+      
+      if (widget.isTrainingTask) {
+        await _uploadTrainingVideo();
+      }
+    }
+  }
+
+  Future<void> _uploadTrainingVideo() async {
+    try {
+      print('开始上传视频');
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      if (userId == null) {
+        print('未找到用户ID');
+        return;
+      }
+
+      if (_videoPath == null) {
+        print('没有视频文件可上传');
+        return;
+      }
+
+      print('视频文件路径: $_videoPath');
+      final file = File(_videoPath!);
+      if (!await file.exists()) {
+        print('视频文件不存在');
+        return;
+      }
+
+      print('创建上传请求');
+      final request = http.MultipartRequest(
+        'POST',
+        // Uri.parse('http://10.252.88.78:8001/videos/upload/reference')
+        Uri.parse(ApiConfig.uploadVideoUrl) 
+      );
+
+      // 添加视频文件，使用正确的字段名 'video'
+      final videoFile = await http.MultipartFile.fromPath(
+        'video',
+        file.path,
+        contentType: MediaType('video', 'mp4'),
+      );
+      request.files.add(videoFile);
+
+      print('发送上传请求');
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      print('上传响应状态码: ${response.statusCode}');
+      print('上传响应体: ${response.body}');
+
+      if (response.statusCode == 200) {
+        print('上传成功');
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('训练完成'),
+                content: Text('您已完成专注模型训练！'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('确定'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      } else {
+        print('上传失败，状态码: ${response.statusCode}');
+        print('错误详情: ${response.body}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('上传失败，请重试: ${response.body}')),
+          );
+        }
+      }
+    } catch (e) {
+      print('上传视频时出错: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('上传出错：$e')),
+        );
+      }
     }
   }
 
   void _startTimer() {
+    print('开始倒计时');
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         setState(() {
           _remainingSeconds--;
         });
+        print('剩余时间: $_remainingSeconds 秒');
       } else {
+        print('倒计时结束');
         timer.cancel();
-        _finishTask();
+        if (widget.isTrainingTask) {
+          print('这是训练任务，准备处理视频');
+          _handleTrainingTaskCompletion();
+        } else {
+          _finishTask();
+        }
       }
     });
   }
 
+  Future<void> _handleTrainingTaskCompletion() async {
+    print('开始处理训练任务完成');
+    if (_isRecording && _cameraController != null) {
+      try {
+        print('正在停止录制...');
+        // 停止录制
+        final XFile video = await _cameraController!.stopVideoRecording();
+        print('录制已停止，视频保存在: ${video.path}');
+        
+        setState(() {
+          _isRecording = false;
+          _videoPath = video.path;
+        });
+
+        print('正在关闭摄像头...');
+        // 关闭摄像头
+        await _cameraController!.dispose();
+        _cameraController = null;
+        print('摄像头已关闭');
+
+        print('准备上传视频...');
+        // 上传视频
+        await _uploadTrainingVideo();
+      } catch (e) {
+        print('处理训练任务时出错: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('处理视频时出错：$e')),
+          );
+        }
+      }
+    } else {
+      print('摄像头状态: ${_cameraController != null ? "已初始化" : "未初始化"}');
+      print('录制状态: ${_isRecording ? "正在录制" : "未在录制"}');
+    }
+  }
+
   Future<void> _finishTask() async {
-    if (_isFinished) return; // 防止多次调用
+    if (_isFinished) return;
     setState(() { _isFinished = true; });
     _timer?.cancel();
     _usedSeconds = widget.initialSeconds - _remainingSeconds;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Complete Timer'),
-          content: Text('Do you want to count this session in statistics?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _submitTaskToServerWithGivenUp(true);
-              },
-            ),
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _submitTaskToServerWithGivenUp(false);
-              },
-            ),
-          ],
-        );
-      },
-    );
+    if (!widget.isTrainingTask) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Complete Timer'),
+            content: Text('Do you want to count this session in statistics?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('No'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _submitTaskToServerWithGivenUp(true);
+                },
+              ),
+              TextButton(
+                child: Text('Yes'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _submitTaskToServerWithGivenUp(false);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   Future<void> _submitTaskToServerWithGivenUp(bool givenUp) async {
-    // final url = 'http://10.252.88.78:8001/tasks/finish';
     final url = ApiConfig.finishTaskUrl;
     final body = jsonEncode({
       'task_id': widget.taskId,
@@ -172,6 +333,57 @@ class _CountdownPageState extends State<CountdownPage> {
           // 保存time到SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setInt('finished_time_task_${widget.taskId}', data['time']);
+          
+          // 如果用户选择计入专注时长，且不是训练任务，则上传视频
+          if (!givenUp && !widget.isTrainingTask && _videoPath != null) {
+            try {
+              final userId = prefs.getInt('user_id');
+              if (userId == null) {
+                print('未找到用户ID');
+                return;
+              }
+
+              final file = File(_videoPath!);
+              if (!await file.exists()) {
+                print('视频文件不存在');
+                return;
+              }
+
+              print('开始上传任务视频');
+              final request = http.MultipartRequest(
+                'POST',
+                Uri.parse('${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}')
+              );
+
+              // 添加视频文件
+              final videoFile = await http.MultipartFile.fromPath(
+                'video',
+                file.path,
+                contentType: MediaType('video', 'mp4'),
+              );
+              request.files.add(videoFile);
+
+              print('发送上传请求');
+              final streamedResponse = await request.send();
+              final response = await http.Response.fromStream(streamedResponse);
+              print('上传响应状态码: ${response.statusCode}');
+              print('上传响应体: ${response.body}');
+              
+              // 打印后端返回的详细内容
+              try {
+                final responseData = jsonDecode(response.body);
+                print('视频上传后端返回数据:');
+                print('状态: ${responseData['status'] ?? '未知'}');
+                print('消息: ${responseData['message'] ?? '无消息'}');
+                print('数据: ${responseData['data'] ?? '无数据'}');
+              } catch (e) {
+                print('解析响应数据时出错: $e');
+                print('原始响应内容: ${response.body}');
+              }
+            } catch (e) {
+              print('上传视频时出错: $e');
+            }
+          }
           
           if (mounted) {
             Navigator.of(context).pop(true); // 返回true表示需要刷新
@@ -270,8 +482,13 @@ class _CountdownPageState extends State<CountdownPage> {
 
   @override
   void dispose() {
+    print('组件销毁，清理资源');
     _timer?.cancel();
-    _cameraController?.dispose();
+    if (_cameraController != null) {
+      print('清理摄像头资源');
+      _cameraController!.dispose();
+      _cameraController = null;
+    }
     super.dispose();
   }
 }

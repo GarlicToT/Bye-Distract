@@ -553,8 +553,6 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
-    final crossAxisCount = isTablet ? 3 : 2;
-    final childAspectRatio = isTablet ? 2.5 : 2.0;
     final padding = screenSize.width * 0.04;
 
     return Scaffold(
@@ -573,26 +571,108 @@ class _TodoListPageState extends State<TodoListPage> {
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _tasks.isEmpty
-              ? Center(
-                  child: Text(
-                    'No tasks yet. Add one!',
+          : Padding(
+              padding: EdgeInsets.all(padding),
+              child: ListView(
+                children: [
+                  _buildTrainingTaskCard(),
+                  ..._tasks.map((task) => _buildTaskCard(task)).toList(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildTrainingTaskCard() {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final fontSize = isTablet ? 20.0 : 18.0;
+    final iconSize = isTablet ? 40.0 : 32.0;
+    final padding = screenSize.width * 0.03;
+
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('训练专注模型'),
+              content: Text('这个任务用于训练您的专注模型。请上传一段您在专注状态下的视频。'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('No'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('Yes'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CountdownPage(
+                          taskTitle: 'Train Your Focus Model',
+                          initialSeconds: 5,
+                          taskId: -1,
+                          isTrainingTask: true,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: padding * 0.5),
+        padding: EdgeInsets.all(padding),
+        decoration: BoxDecoration(
+          color: Color(0xFFE6E6FA),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Train Your Focus Model',
                     style: TextStyle(
-                      fontSize: screenSize.width * 0.05,
-                      color: Colors.grey
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w500
                     ),
                   ),
-                )
-              : Padding(
-                  padding: EdgeInsets.all(padding),
-                  child: GridView.count(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: padding,
-                    mainAxisSpacing: padding,
-                    childAspectRatio: childAspectRatio,
-                    children: _tasks.map((task) => _buildTaskCard(task)).toList(),
+                  SizedBox(height: 8),
+                  Text(
+                    '5s',
+                    style: TextStyle(
+                      fontSize: fontSize * 0.8,
+                      color: Colors.black87
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.psychology,
+              size: iconSize,
+              color: Colors.black.withOpacity(0.7),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -619,7 +699,7 @@ class _TodoListPageState extends State<TodoListPage> {
         _showModifyTaskDialog(task);
       },
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: padding * 0.5, horizontal: padding),
+        margin: EdgeInsets.symmetric(vertical: padding * 0.5),
         padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: _getTaskColor(task),
@@ -633,12 +713,10 @@ class _TodoListPageState extends State<TodoListPage> {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
                     task.title,
@@ -646,12 +724,10 @@ class _TodoListPageState extends State<TodoListPage> {
                       fontSize: fontSize,
                       fontWeight: FontWeight.w500
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
                   ),
                   if (task.mode == 'count down' && countDownDisplayTime.isNotEmpty)
                     Padding(
-                      padding: EdgeInsets.only(top: padding * 0.3),
+                      padding: EdgeInsets.only(top: 8),
                       child: Text(
                         countDownDisplayTime,
                         style: TextStyle(
@@ -663,56 +739,51 @@ class _TodoListPageState extends State<TodoListPage> {
                 ],
               ),
             ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (task.mode == 'count down')
-                  GestureDetector(
-                    onTap: () async {
-                      final shouldRefresh = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CountdownPage(
-                            taskTitle: task.title,
-                            initialSeconds: (task.countdownTime ?? 0) * 60,
-                            taskId: task.taskId,
-                          ),
-                        ),
-                      );
-                      if (shouldRefresh == true) {
-                        _fetchTasks();
-                      }
-                    },
-                    child: Icon(
-                      task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                      size: iconSize,
-                      color: Colors.black.withOpacity(0.7),
+            if (task.mode == 'count down')
+              GestureDetector(
+                onTap: () async {
+                  final shouldRefresh = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CountdownPage(
+                        taskTitle: task.title,
+                        initialSeconds: (task.countdownTime ?? 0) * 60,
+                        taskId: task.taskId,
+                      ),
                     ),
-                  ),
-                if (task.mode == 'count up')
-                  GestureDetector(
-                    onTap: () async {
-                      final shouldRefresh = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CountupPage(
-                            taskTitle: task.title,
-                            taskId: task.taskId,
-                          ),
-                        ),
-                      );
-                      if (shouldRefresh == true) {
-                        _fetchTasks();
-                      }
-                    },
-                    child: Icon(
-                      Icons.timer_outlined,
-                      size: iconSize,
-                      color: Colors.black.withOpacity(0.7),
+                  );
+                  if (shouldRefresh == true) {
+                    _fetchTasks();
+                  }
+                },
+                child: Icon(
+                  task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                  size: iconSize,
+                  color: Colors.black.withOpacity(0.7),
+                ),
+              ),
+            if (task.mode == 'count up')
+              GestureDetector(
+                onTap: () async {
+                  final shouldRefresh = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CountupPage(
+                        taskTitle: task.title,
+                        taskId: task.taskId,
+                      ),
                     ),
-                  ),
-              ],
-            )
+                  );
+                  if (shouldRefresh == true) {
+                    _fetchTasks();
+                  }
+                },
+                child: Icon(
+                  Icons.timer_outlined,
+                  size: iconSize,
+                  color: Colors.black.withOpacity(0.7),
+                ),
+              ),
           ],
         ),
       ),

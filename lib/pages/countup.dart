@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
 import '../config/api_config.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CountupPage extends StatefulWidget {
   final String taskTitle;
@@ -144,7 +146,6 @@ class _CountupPageState extends State<CountupPage> {
   }
 
   Future<void> _submitTaskToServerWithGivenUp(bool givenUp) async {
-    // final url = 'http://10.252.88.78:8001/tasks/finish';
     final url = ApiConfig.finishTaskUrl;
     final body = jsonEncode({
       'task_id': widget.taskId,
@@ -163,6 +164,59 @@ class _CountupPageState extends State<CountupPage> {
           final data = jsonDecode(response.body);
           if (data['task_id'] == widget.taskId && 
               data['is_finished'] == true) {
+            
+            // 如果用户选择计入专注时长，则上传视频
+            if (!givenUp && _videoPath != null) {
+              try {
+                final prefs = await SharedPreferences.getInstance();
+                final userId = prefs.getInt('user_id');
+                if (userId == null) {
+                  print('未找到用户ID');
+                  return;
+                }
+
+                final file = File(_videoPath!);
+                if (!await file.exists()) {
+                  print('视频文件不存在');
+                  return;
+                }
+
+                print('开始上传任务视频');
+                final request = http.MultipartRequest(
+                  'POST',
+                  Uri.parse('${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}')
+                );
+
+                // 添加视频文件
+                final videoFile = await http.MultipartFile.fromPath(
+                  'video',
+                  file.path,
+                  contentType: MediaType('video', 'mp4'),
+                );
+                request.files.add(videoFile);
+
+                print('发送上传请求');
+                final streamedResponse = await request.send();
+                final response = await http.Response.fromStream(streamedResponse);
+                print('上传响应状态码: ${response.statusCode}');
+                print('上传响应体: ${response.body}');
+                
+                // 打印后端返回的详细内容
+                try {
+                  final responseData = jsonDecode(response.body);
+                  print('视频上传后端返回数据:');
+                  print('状态: ${responseData['status'] ?? '未知'}');
+                  print('消息: ${responseData['message'] ?? '无消息'}');
+                  print('数据: ${responseData['data'] ?? '无数据'}');
+                } catch (e) {
+                  print('解析响应数据时出错: $e');
+                  print('原始响应内容: ${response.body}');
+                }
+              } catch (e) {
+                print('上传视频时出错: $e');
+              }
+            }
+
             Navigator.of(context).pop(true);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(

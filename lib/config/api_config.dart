@@ -18,6 +18,10 @@ class ApiConfig {
   //数据相关
   static String get getStatisticsUrl => '$baseUrl/stats';
 
+  // 视频相关
+  static String get uploadVideoUrl => '$baseUrl/videos/upload/reference';
+  static String get uploadansVideoUrl => '$baseUrl/videos/upload/ans';
+
   // 学习室相关
   static String get createStudyRoomUrl => '$baseUrl/study_room/add';
   static String get leaveStudyRoomUrl => '$baseUrl/study_room/leave';
