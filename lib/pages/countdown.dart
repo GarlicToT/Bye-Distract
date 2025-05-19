@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
+import 'package:camera/camera.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class CountdownPage extends StatefulWidget {
   final String taskTitle;
@@ -21,12 +24,78 @@ class _CountdownPageState extends State<CountdownPage> {
   Timer? _timer;
   bool _isFinished = false;
   int _usedSeconds = 0;
+  CameraController? _cameraController;
+  bool _isRecording = false;
+  String? _videoPath;
 
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.initialSeconds;
     _startTimer();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) return;
+    
+    _cameraController = CameraController(
+      cameras.first,
+      ResolutionPreset.medium,
+      enableAudio: true,
+    );
+    
+    await _cameraController!.initialize();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _showCameraDialog() async {
+    _timer?.cancel();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('开启摄像头'),
+          content: Text('是否要开启摄像头进行录制？'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startTimer();
+              },
+            ),
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                if (_cameraController != null && _cameraController!.value.isInitialized) {
+                  final directory = await getTemporaryDirectory();
+                  _videoPath = '${directory.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+                  await _cameraController!.startVideoRecording();
+                  setState(() {
+                    _isRecording = true;
+                  });
+                }
+                _startTimer();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _stopRecording() async {
+    if (_isRecording && _cameraController != null) {
+      final XFile video = await _cameraController!.stopVideoRecording();
+      setState(() {
+        _isRecording = false;
+        _videoPath = video.path;
+      });
+      // 这里可以添加保存视频路径到本地存储或服务器的逻辑
+    }
   }
 
   void _startTimer() {
@@ -131,12 +200,6 @@ class _CountdownPageState extends State<CountdownPage> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -161,12 +224,15 @@ class _CountdownPageState extends State<CountdownPage> {
           SizedBox(height: 8),
           Text('Focusing', style: TextStyle(fontSize: 20)),
           SizedBox(height: 32),
-          Center(
+          GestureDetector(
+            onTap: _showCameraDialog,
             child: Container(
               width: 300,
               height: 300,
               color: Colors.black12,
-              child: Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.grey[400])),
+              child: _cameraController != null && _cameraController!.value.isInitialized
+                  ? CameraPreview(_cameraController!)
+                  : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.grey[400])),
             ),
           ),
           Spacer(),
@@ -181,11 +247,11 @@ class _CountdownPageState extends State<CountdownPage> {
                   child: Icon(Icons.pause, color: Colors.white, size: 32),
                 ),
                 GestureDetector(
-                  onTap: _finishTask,
+                  onTap: _isRecording ? _stopRecording : _finishTask,
                   child: CircleAvatar(
                     radius: 32,
                     backgroundColor: Colors.black,
-                    child: Icon(Icons.stop, color: Colors.white, size: 32),
+                    child: Icon(_isRecording ? Icons.stop : Icons.stop, color: Colors.white, size: 32),
                   ),
                 ),
               ],
@@ -194,5 +260,12 @@ class _CountdownPageState extends State<CountdownPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _cameraController?.dispose();
+    super.dispose();
   }
 }

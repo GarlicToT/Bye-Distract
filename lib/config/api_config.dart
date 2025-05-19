@@ -1,7 +1,7 @@
 class ApiConfig {
   // static const String baseUrl = 'http://10.252.88.78:8001';
   // static const String baseUrl = 'http://10.253.52.107:8001';
-  static const String baseUrl = 'http://10.252.88.70:8001';
+  static const String baseUrl = 'http://10.252.88.49:8001';
 
   
   // 用户相关
