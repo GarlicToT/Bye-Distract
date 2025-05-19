@@ -18,6 +18,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
   List<dynamic> leaderboard = [];
   Map<String, dynamic>? currentUser;
   bool isLoading = true;
+  int? currentUserId;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       roomName = prefs.getString('room_name') ?? '';
       roomDescription = prefs.getString('room_description') ?? '';
       roomId = prefs.getInt('room_id')?.toString() ?? '';
+      currentUserId = prefs.getInt('user_id');
     });
     await _fetchLeaderboard();
   }
@@ -46,22 +48,59 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         return;
       }
 
+      print('开始获取排行榜数据...');
       final response = await http.get(
         Uri.parse(ApiConfig.leaderboardStudyRoomUrl(studyRoomId, userId)),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        List<dynamic> leaderboardData = data['leaderboard'];
+        print('成功获取排行榜数据，用户数量: ${leaderboardData.length}');
+        
+        // 获取所有用户的user_id
+        final userIds = leaderboardData.map((user) => user['user_id'].toString()).join(',');
+        print('准备获取用户头像，用户ID列表: $userIds');
+
+        // 批量获取头像
+        try {
+          final avatarResponse = await http.post(
+            Uri.parse(ApiConfig.getAvatarUrl),
+            body: {'user_ids': userIds},
+          );
+          print('头像请求状态码: ${avatarResponse.statusCode}');
+          print('头像响应数据: ${avatarResponse.body}');
+          
+          if (avatarResponse.statusCode == 200) {
+            final avatarData = jsonDecode(avatarResponse.body);
+            if (avatarData['status'] == 'success') {
+              final Map<String, dynamic> avatarUrls = avatarData['data'];
+              
+              // 为每个用户设置头像URL
+              for (var user in leaderboardData) {
+                final userId = user['user_id'].toString();
+                user['avatar_url'] = avatarUrls[userId];
+                print('用户 $userId 的头像URL: ${user['avatar_url']}');
+              }
+            }
+          } else {
+            print('获取头像失败: ${avatarResponse.statusCode}');
+          }
+        } catch (e) {
+          print('获取头像时出错: $e');
+        }
+
         setState(() {
-          leaderboard = data['leaderboard'];
+          leaderboard = leaderboardData;
           currentUser = data['current_user'];
           isLoading = false;
         });
+        print('排行榜数据更新完成');
       } else {
-        print('Failed to fetch leaderboard: ${response.statusCode}');
+        print('获取排行榜失败，状态码: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching leaderboard: $e');
+      print('获取排行榜数据时出错: $e');
     }
   }
 
@@ -146,6 +185,8 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
   }
 
   Widget _buildUserCard(Map<String, dynamic> user) {
+    final bool isCurrentUser = user['user_id'] == currentUserId;
+    
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 8),
@@ -175,7 +216,19 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                   color: Colors.grey[200],
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.image, size: 32, color: Colors.grey[400]),
+                child: user['avatar_url'] != null
+                    ? ClipOval(
+                        child: Image.network(
+                          user['avatar_url'],
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(Icons.person, size: 32, color: Colors.grey[400]);
+                          },
+                        ),
+                      )
+                    : Icon(Icons.person, size: 32, color: Colors.grey[400]),
               ),
             ],
           ),

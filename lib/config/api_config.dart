@@ -7,7 +7,8 @@ class ApiConfig {
   // 用户相关
   static String get loginUrl => '$baseUrl/users/login';
   static String get registerUrl => '$baseUrl/users/register';
-  
+  static String get uploadAvatarUrl => '$baseUrl/photos/upload';
+  static String get getAvatarUrl => '$baseUrl/photos';
   // 任务相关
   static String get addTaskUrl => '$baseUrl/tasks/add';
   static String get fetchTasksUrl => '$baseUrl/tasks';
