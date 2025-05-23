@@ -153,14 +153,14 @@ class _ProfilePageState extends State<ProfilePage> {
         // 上传成功后重新加载用户信息
         await _loadUserInfo();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('头像上传成功')),
+          SnackBar(content: Text('avatar uploaded successfully')),
         );
       } else {
         print('上传失败，状态码: ${response.statusCode}');
         var errorData = await response.stream.bytesToString();
         print('错误响应数据: $errorData');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('上传失败，请重试')),
+          SnackBar(content: Text('upload failed, please try again')),
         );
       }
     } catch (e, stackTrace) {
