@@ -78,8 +78,8 @@ class _CountupPageState extends State<CountupPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('开启摄像头'),
-          content: Text('是否要开启摄像头进行录制？'),
+          title: Text('Open the camera'),
+          content: Text('Do you want to open the camera to record?'),
           actions: <Widget>[
             TextButton(
               child: Text('No'),

@@ -105,13 +105,13 @@ class _CountdownPageState extends State<CountdownPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('开启摄像头'),
-          content: Text('是否要开启摄像头进行录制？'),
+          title: Text('Open the camera'),
+          content: Text('Do you want to open the camera to record?'),
           actions: <Widget>[
             TextButton(
               child: Text('No'),
               onPressed: () {
-                print('用户选择不开启摄像头');
+                print('User chose not to open the camera');
                 Navigator.of(context).pop();
                 // 非训练任务且用户选择不开启摄像头时，开始计时
                 if (!widget.isTrainingTask) {
@@ -122,7 +122,7 @@ class _CountdownPageState extends State<CountdownPage> {
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                print('用户选择开启摄像头');
+                print('User chose to open the camera');
                 Navigator.of(context).pop();
                 // 非训练任务且用户选择开启摄像头时，初始化摄像头并开始计时和录制
                 if (!widget.isTrainingTask) {
