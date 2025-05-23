@@ -14,11 +14,31 @@ class StudyRoomPage extends GeneratorPage {
   _StudyRoomPageState createState() => _StudyRoomPageState();
 }
 
-class _StudyRoomPageState extends GeneratorPageState {
+class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 2; // 保持和GeneratorPage一致，2为Study Room
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshPage();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _refreshPage();
+  }
+
+  void _refreshPage() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
