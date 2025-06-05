@@ -116,10 +116,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
           onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => StudyRoomPage()),
-            );
+            Navigator.pop(context);
           },
         ),
         title: Text('Study Room', style: TextStyle(
