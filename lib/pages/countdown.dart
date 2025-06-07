@@ -41,7 +41,7 @@ class _CountdownPageState extends State<CountdownPage> {
   void initState() {
     super.initState();
     _remainingSeconds = widget.initialSeconds;
-    // 只有训练任务才自动开始计时和初始化摄像头
+    // Only the training task automatically starts timing and initializing the camera
     if (widget.isTrainingTask) {
       _startTimer();
       _initializeCamera();
@@ -66,7 +66,7 @@ class _CountdownPageState extends State<CountdownPage> {
     await _cameraController!.initialize();
     if (mounted) {
       setState(() {});
-      // 只有训练任务才自动开始录制
+      // Only the training task automatically starts recording
       if (widget.isTrainingTask) {
         _startRecording();
       }
@@ -74,32 +74,32 @@ class _CountdownPageState extends State<CountdownPage> {
   }
 
   Future<void> _startRecording() async {
-    print('开始录制视频');
+    print('Start recording video');
     if (_cameraController != null && _cameraController!.value.isInitialized) {
       try {
         final directory = await getTemporaryDirectory();
         _videoPath = '${directory.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
-        print('视频将保存到: $_videoPath');
+        print('Video will be saved to: $_videoPath');
         await _cameraController!.startVideoRecording();
         setState(() {
           _isRecording = true;
         });
-        print('开始录制视频成功');
+        print('Start recording video successfully');
       } catch (e) {
-        print('开始录制时出错: $e');
+        print('Error starting recording: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('开始录制时出错：$e')),
+            SnackBar(content: Text('Error starting recording: $e')),
           );
         }
       }
     } else {
-      print('摄像头未初始化，无法开始录制');
+      print('Camera not initialized, cannot start recording');
     }
   }
 
   Future<void> _showCameraDialog() async {
-    print('显示摄像头对话框');
+    print('Show camera dialog');
     
     showDialog(
       context: context,
@@ -113,7 +113,7 @@ class _CountdownPageState extends State<CountdownPage> {
               onPressed: () {
                 print('User chose not to open the camera');
                 Navigator.of(context).pop();
-                // 非训练任务且用户选择不开启摄像头时，开始计时
+                // If it is not a training task and the user chooses not to open the camera, start timing
                 if (!widget.isTrainingTask) {
                   _startTimer();
                 }
@@ -124,7 +124,7 @@ class _CountdownPageState extends State<CountdownPage> {
               onPressed: () async {
                 print('User chose to open the camera');
                 Navigator.of(context).pop();
-                // 非训练任务且用户选择开启摄像头时，初始化摄像头并开始计时和录制
+                // If it is not a training task and the user chooses to open the camera, initialize the camera and start timing and recording
                 if (!widget.isTrainingTask) {
                   await _initializeCamera();
                   _startTimer();
@@ -142,7 +142,7 @@ class _CountdownPageState extends State<CountdownPage> {
   }
 
   Future<void> _stopRecording() async {
-    print('停止录制视频');
+    print('Stop recording video');
     if (_isRecording && _cameraController != null) {
       try {
         final XFile video = await _cameraController!.stopVideoRecording();
@@ -150,53 +150,52 @@ class _CountdownPageState extends State<CountdownPage> {
           _isRecording = false;
           _videoPath = video.path;
         });
-        print('视频已保存到: $_videoPath');
+        print('Video saved to: $_videoPath');
         
         if (widget.isTrainingTask) {
-          print('这是训练任务，准备上传视频');
+          print('This is a training task, prepare to upload video');
           await _uploadTrainingVideo();
         }
       } catch (e) {
-        print('停止录制时出错: $e');
+        print('Error stopping recording: $e');
       }
     } else {
-      print('没有正在录制的视频或摄像头未初始化');
+      print('No recording video or camera not initialized');
     }
   }
 
   Future<void> _uploadTrainingVideo() async {
     try {
-      print('开始上传视频');
+      print('Start uploading video');
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('user_id');
       if (userId == null) {
-        print('未找到用户ID');
+        print('User ID not found');
         return;
       }
 
       if (_videoPath == null) {
-        print('没有视频文件可上传');
+        print('No video file to upload');
         return;
       }
 
-      print('视频文件路径: $_videoPath');
+      print('Video file path: $_videoPath');
       final file = File(_videoPath!);
       if (!await file.exists()) {
-        print('视频文件不存在');
+        print('Video file does not exist');
         return;
       }
 
-      print('创建上传请求');
-      // 构建上传URL，将user_id作为URL参数
+      print('Create upload request');
       final uploadUrl = '${ApiConfig.uploadVideoUrl}?user_id=$userId';
-      print('上传URL: $uploadUrl');
+      print('Upload URL: $uploadUrl');
       
       final request = http.MultipartRequest(
         'POST',
         Uri.parse(uploadUrl)
       );
 
-      // 添加视频文件
+      // Add video file
       final videoFile = await http.MultipartFile.fromPath(
         'video',
         file.path,
@@ -204,24 +203,24 @@ class _CountdownPageState extends State<CountdownPage> {
       );
       request.files.add(videoFile);
 
-      print('发送上传请求');
+      print('Send upload request');
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      print('上传响应状态码: ${response.statusCode}');
-      print('上传响应体: ${response.body}');
+      print('Upload response status code: ${response.statusCode}');
+      print('Upload response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        print('上传成功');
+        print('Upload successful');
         if (mounted) {
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('训练完成'),
-                content: Text('您已完成专注模型训练！'),
+                title: Text('Training completed'),
+                content: Text('You have completed the focus model training!'),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('确定'),
+                    child: Text('OK'),
                     onPressed: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).pop();
@@ -233,37 +232,37 @@ class _CountdownPageState extends State<CountdownPage> {
           );
         }
       } else {
-        print('上传失败，状态码: ${response.statusCode}');
-        print('错误详情: ${response.body}');
+        print('Upload failed, status code: ${response.statusCode}');
+        print('Error details: ${response.body}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('上传失败，请重试: ${response.body}')),
+            SnackBar(content: Text('Upload failed, please try again: ${response.body}')),
           );
         }
       }
     } catch (e) {
-      print('上传视频时出错: $e');
+      print('Error uploading video: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('上传出错：$e')),
+          SnackBar(content: Text('Error uploading video: $e')),
         );
       }
     }
   }
 
   void _startTimer() {
-    print('开始倒计时');
+    print('Start the countdown');
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         setState(() {
           _remainingSeconds--;
         });
-        print('剩余时间: $_remainingSeconds 秒');
+        print('Remaining time: $_remainingSeconds seconds');
       } else {
-        print('倒计时结束');
+        print('Countdown finished');
         timer.cancel();
         if (widget.isTrainingTask) {
-          print('这是训练任务，准备处理视频');
+          print('This is a training task, prepare to handle video');
           _handleTrainingTaskCompletion();
         } else {
           _finishTask();
@@ -273,70 +272,70 @@ class _CountdownPageState extends State<CountdownPage> {
   }
 
   Future<void> _handleTrainingTaskCompletion() async {
-    print('开始处理训练任务完成');
+    print('Start handling training task completion');
     if (_isRecording && _cameraController != null) {
       try {
-        print('正在停止录制...');
+        print('Stopping recording...');
         // 停止录制
         final XFile video = await _cameraController!.stopVideoRecording();
-        print('录制已停止，视频保存在: ${video.path}');
+        print('Recording stopped, video saved to: ${video.path}');
         
         setState(() {
           _isRecording = false;
           _videoPath = video.path;
         });
 
-        print('正在关闭摄像头...');
-        // 关闭摄像头
+        print('Closing camera...');
+        // close camera
         await _cameraController!.dispose();
         _cameraController = null;
-        print('摄像头已关闭');
+        print('Camera closed');
 
-        print('准备上传视频...');
-        // 上传视频
+        print('Preparing to upload video...');
+        // upload video
         await _uploadTrainingVideo();
       } catch (e) {
-        print('处理训练任务时出错: $e');
+        print('Error handling training task: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('处理视频时出错：$e')),
+            SnackBar(content: Text('Error handling video: $e')),
           );
         }
       }
     } else {
-      print('摄像头状态: ${_cameraController != null ? "已初始化" : "未初始化"}');
-      print('录制状态: ${_isRecording ? "正在录制" : "未在录制"}');
+      print('Camera status: ${_cameraController != null ? "Initialized" : "Not initialized"}');
+      print('Recording status: ${_isRecording ? "Recording" : "Not recording"}');
     }
   }
 
   Future<void> _finishTask() async {
-    print('完成任务');
+    print('Task completed');
     if (_isFinished) {
-      print('任务已经完成，直接返回');
+      print('Task already completed, returning directly');
       return;
     }
     setState(() { _isFinished = true; });
     _timer?.cancel();
     _usedSeconds = widget.initialSeconds - _remainingSeconds;
-    print('已使用时间: $_usedSeconds 秒');
+    print('Time used: $_usedSeconds seconds');
 
-    // 如果正在录制视频，先停止录制
+    // If you are recording a video, stop recording first
     if (_isRecording && _cameraController != null) {
-      print('正在停止视频录制...');
+      print('Stopping video recording...');
       try {
         final XFile video = await _cameraController!.stopVideoRecording();
         setState(() {
           _isRecording = false;
           _videoPath = video.path;
         });
-        print('视频已保存到: $_videoPath');
+        print('Video saved to: $_videoPath');
       } catch (e) {
-        print('停止录制时出错: $e');
+        print('Error stopping recording: $e');
       }
     }
 
     if (!widget.isTrainingTask) {
-      print('这是普通任务，显示完成对话框');
+      print('This is a normal task, showing completion dialog');
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -347,7 +346,7 @@ class _CountdownPageState extends State<CountdownPage> {
               TextButton(
                 child: Text('No'),
                 onPressed: () {
-                  print('用户选择不计入统计');
+                  print('User chose not to count in statistics');
                   Navigator.of(context).pop();
                   _submitTaskToServerWithGivenUp(true);
                 },
@@ -355,7 +354,7 @@ class _CountdownPageState extends State<CountdownPage> {
               TextButton(
                 child: Text('Yes'),
                 onPressed: () {
-                  print('用户选择计入统计');
+                  print('User chose to count in statistics');
                   Navigator.of(context).pop();
                   _submitTaskToServerWithGivenUp(false);
                 },
@@ -365,13 +364,13 @@ class _CountdownPageState extends State<CountdownPage> {
         },
       );
     } else {
-      print('这是训练任务，直接处理视频');
+      print('This is a training task, directly handle video');
       _handleTrainingTaskCompletion();
     }
   }
 
   Future<void> _submitTaskToServerWithGivenUp(bool givenUp) async {
-    print('开始提交任务，givenUp: $givenUp');
+    print('Start submitting task, givenUp: $givenUp');
     final url = ApiConfig.finishTaskUrl;
     final body = jsonEncode({
       'task_id': widget.taskId,
@@ -386,115 +385,115 @@ class _CountdownPageState extends State<CountdownPage> {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('任务提交响应: $data');
-        // 验证返回的数据是否完整
+        print('Task submission response: $data');
+        // Verify that the returned data is complete
         if (data['task_id'] == widget.taskId && 
             data['is_finished'] == true) {
-          // 保存time到SharedPreferences
+          // Save time to SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setInt('finished_time_task_${widget.taskId}', data['time']);
           
-          // 检查视频上传条件
-          print('检查视频上传条件:');
+          // Check video upload conditions
+          print('Checking video upload conditions:');
           print('givenUp: $givenUp');
           print('isTrainingTask: ${widget.isTrainingTask}');
           print('_videoPath: $_videoPath');
           
-          // 如果用户选择计入专注时长，且不是训练任务，则上传视频
+          // If the user chooses to count in statistics, and it is not a training task, upload the video
           if (!givenUp && !widget.isTrainingTask && _videoPath != null) {
-            print('满足所有上传条件，开始上传视频');
+            print('All conditions met, starting video upload');
             try {
               final userId = prefs.getInt('user_id');
               if (userId == null) {
-                print('未找到用户ID');
+                print('User ID not found');
                 return;
               }
-              print('准备上传视频，用户ID: $userId, 任务ID: ${widget.taskId}');
+              print('Preparing to upload video, user ID: $userId, task ID: ${widget.taskId}');
 
               final file = File(_videoPath!);
               if (!await file.exists()) {
-                print('视频文件不存在: $_videoPath');
+                print('Video file does not exist: $_videoPath');
                 return;
               }
-              print('视频文件存在，大小: ${await file.length()} 字节');
+              print('Video file exists, size: ${await file.length()} bytes');
 
-              // 构建上传URL，将user_id和task_id作为URL参数
+              // Build upload URL, with user_id and task_id as URL parameters
               final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
-              print('开始上传任务视频到: $uploadUrl');
+              print('Starting to upload task video to: $uploadUrl');
 
-              // 创建multipart请求
+              // Create multipart request
               final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
               
-              // 添加视频文件
+              // Add video file
               final videoFile = await http.MultipartFile.fromPath(
-                'video',  // 确保这里的字段名与后端期望的一致
+                'video',  // Ensure the field name here is consistent with the backend expectation
                 file.path,
                 contentType: MediaType('video', 'mp4'),
               );
               request.files.add(videoFile);
 
-              print('发送上传请求...');
-              print('请求URL: ${request.url}');
-              print('请求方法: ${request.method}');
-              print('请求参数: user_id=$userId, task_id=${widget.taskId}');
-              print('视频文件: ${file.path}');
+              print('Sending upload request...');
+              print('Request URL: ${request.url}');
+              print('Request method: ${request.method}');
+              print('Request parameters: user_id=$userId, task_id=${widget.taskId}');
+              print('Video file: ${file.path}');
               print('Content-Type: ${videoFile.contentType}');
 
               final streamedResponse = await request.send();
-              print('收到响应，状态码: ${streamedResponse.statusCode}');
-              print('响应头: ${streamedResponse.headers}');
+              print('Received response, status code: ${streamedResponse.statusCode}');
+              print('Response headers: ${streamedResponse.headers}');
               
               final response = await http.Response.fromStream(streamedResponse);
-              print('完整响应体: ${response.body}');
+              print('Complete response body: ${response.body}');
               
               if (response.statusCode == 200) {
-                print('视频上传成功！');
+                print('Video upload successful!');
                 try {
                   final responseData = jsonDecode(response.body);
-                  print('视频上传后端返回数据:');
-                  print('状态: ${responseData['status'] ?? '未知'}');
-                  print('专注比例: ${responseData['focus_ratio'] ?? '未知'}');
-                  print('视频URL: ${responseData['video_url'] ?? '未知'}');
+                  print('Video upload backend return data:');
+                  print('Status: ${responseData['status'] ?? 'Unknown'}');
+                  print('Focus ratio: ${responseData['focus_ratio'] ?? 'Unknown'}');
+                  print('Video URL: ${responseData['video_url'] ?? 'Unknown'}');
                   
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('视频上传成功！专注比例: ${responseData['focus_ratio']}')),
+                      SnackBar(content: Text('Video upload successful! Focus ratio: ${responseData['focus_ratio']}')),
                     );
                   }
                 } catch (e) {
-                  print('解析响应数据时出错: $e');
-                  print('原始响应内容: ${response.body}');
+                  print('Error parsing response data: $e');
+                  print('Original response content: ${response.body}');
                 }
               } else {
-                print('视频上传失败，状态码: ${response.statusCode}');
-                print('错误详情: ${response.body}');
+                print('Video upload failed, status code: ${response.statusCode}');
+                print('Error details: ${response.body}');
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('上传失败，请重试: ${response.body}')),
+                    SnackBar(content: Text('Upload failed, please try again: ${response.body}')),
                   );
                 }
               }
             } catch (e) {
-              print('上传视频时出错: $e');
-              print('错误堆栈: ${StackTrace.current}');
+              print('Error uploading video: $e');
+              print('Error stack trace: ${StackTrace.current}');
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('上传出错：$e')),
+                  SnackBar(content: Text('Upload error: $e')),
                 );
               }
             }
           } else {
-            print('不满足视频上传条件:');
-            if (givenUp) print('- 用户选择了不计入统计');
-            if (widget.isTrainingTask) print('- 这是训练任务');
-            if (_videoPath == null) print('- 没有视频文件');
+            print('Conditions not met:');
+            if (givenUp) print('- User chose not to count in statistics');
+            if (widget.isTrainingTask) print('- This is a training task');
+            if (_videoPath == null) print('- No video file');
           }
           
           if (mounted) {
-            Navigator.of(context).pop(true); // 返回true表示需要刷新
+            Navigator.of(context).pop(true); // Return true to refresh
           }
         } else {
-          print('服务器返回数据不完整: $data');
+          print('Server returned incomplete data: $data');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Invalid response from server')),
@@ -502,8 +501,8 @@ class _CountdownPageState extends State<CountdownPage> {
           }
         }
       } else {
-        print('任务提交失败，状态码: ${response.statusCode}');
-        print('错误详情: ${response.body}');
+        print('Task submission failed, status code: ${response.statusCode}');
+        print('Error details: ${response.body}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to complete task: ${response.body}')),
@@ -511,7 +510,7 @@ class _CountdownPageState extends State<CountdownPage> {
         }
       }
     } catch (e) {
-      print('提交任务时出错: $e');
+      print('Error submitting task: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Network error: $e')),
@@ -541,15 +540,15 @@ class _CountdownPageState extends State<CountdownPage> {
           SizedBox(height: 32),
           Text(
             widget.taskTitle.toUpperCase(),
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Montserrat'),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Montserrat'),
           ),
           SizedBox(height: 24),
           Text(
             _formatTime(_remainingSeconds),
-            style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, color: Colors.lightBlue[100], letterSpacing: 4),
+            style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.lightBlue[100], letterSpacing: 4),
           ),
           SizedBox(height: 8),
-          Text('Focusing', style: TextStyle(fontSize: 20)),
+          Text('Focusing', style: TextStyle(fontSize: 16)),
           SizedBox(height: 32),
           GestureDetector(
             onTap: _showCameraDialog,
@@ -566,13 +565,8 @@ class _CountdownPageState extends State<CountdownPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.black,
-                  child: Icon(Icons.pause, color: Colors.white, size: 32),
-                ),
                 GestureDetector(
                   onTap: _isRecording ? _stopRecording : _finishTask,
                   child: CircleAvatar(
@@ -591,10 +585,10 @@ class _CountdownPageState extends State<CountdownPage> {
 
   @override
   void dispose() {
-    print('组件销毁，清理资源');
+    print('Component destroyed, cleaning resources');
     _timer?.cancel();
     if (_cameraController != null) {
-      print('清理摄像头资源');
+      print('Cleaning camera resources');
       _cameraController!.dispose();
       _cameraController = null;
     }

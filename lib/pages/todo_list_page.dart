@@ -98,8 +98,8 @@ class _TodoListPageState extends State<TodoListPage> {
         'time': mode == 'count down' ? (countdownTimeInMinutes ?? 0) * 60 : 0,
       };
       
-      print('发送请求到: ${ApiConfig.addTaskUrl}');
-      print('请求体: ${jsonEncode(requestBody)}');
+      print('Sending request to: ${ApiConfig.addTaskUrl}');
+      print('Request body: ${jsonEncode(requestBody)}');
       
       final response = await http.post(
         Uri.parse(ApiConfig.addTaskUrl),
@@ -109,8 +109,8 @@ class _TodoListPageState extends State<TodoListPage> {
         body: jsonEncode(requestBody),
       );
 
-      print('响应状态码: ${response.statusCode}');
-      print('响应体: ${response.body}');
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         _fetchTasks();
@@ -128,8 +128,8 @@ class _TodoListPageState extends State<TodoListPage> {
   Future<void> _deleteTaskFromServer(int taskId) async {
     try {
       final requestBody = {'task_id': taskId};
-      print('发送删除请求到: ${ApiConfig.deleteTaskUrl}');
-      print('请求体: ${jsonEncode(requestBody)}');
+      print('Sending delete request to: ${ApiConfig.deleteTaskUrl}');
+      print('Request body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse(ApiConfig.deleteTaskUrl),
@@ -137,13 +137,13 @@ class _TodoListPageState extends State<TodoListPage> {
         body: jsonEncode(requestBody),
       );
 
-      print('删除响应状态码: ${response.statusCode}');
-      print('删除响应体: ${response.body}');
+      print('Delete response status code: ${response.statusCode}');
+      print('Delete response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseJson = jsonDecode(response.body);
         if (responseJson['code'] == 200) {
-          // 从本地任务列表中移除被删除的任务
+          // Remove the deleted task from the local task list
           setState(() {
             _tasks.removeWhere((task) => task.taskId == taskId);
           });
@@ -174,8 +174,8 @@ class _TodoListPageState extends State<TodoListPage> {
         'time': newMode == 'count down' ? (countdownTimeInMinutes ?? 0) * 60 : 0,
       };
       
-      print('发送修改请求到: ${ApiConfig.modifyTaskUrl}');
-      print('请求体: ${jsonEncode(requestBody)}');
+      print('Sending modify request to: ${ApiConfig.modifyTaskUrl}');
+      print('Request body: ${jsonEncode(requestBody)}');
       
       final response = await http.post(
         Uri.parse(ApiConfig.modifyTaskUrl),
@@ -183,13 +183,13 @@ class _TodoListPageState extends State<TodoListPage> {
         body: jsonEncode(requestBody),
       );
 
-      print('修改响应状态码: ${response.statusCode}');
-      print('修改响应体: ${response.body}');
+      print('Modify response status code: ${response.statusCode}');
+      print('Modify response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         
-        // 更新任务列表中的对应任务
+        // Update the corresponding task in the task list
         setState(() {
           final taskIndex = _tasks.indexWhere((t) => t.taskId == task.taskId);
           if (taskIndex != -1) {
@@ -588,8 +588,8 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget _buildTrainingTaskCard() {
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
-    final fontSize = isTablet ? 20.0 : 18.0;
-    final iconSize = isTablet ? 40.0 : 32.0;
+    final fontSize = isTablet ? 16.0 : 14.0;
+    final iconSize = isTablet ? 32.0 : 28.0;
     final padding = screenSize.width * 0.03;
 
     return GestureDetector(
@@ -759,7 +759,7 @@ class _TodoListPageState extends State<TodoListPage> {
                   }
                 },
                 child: Icon(
-                  task.isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                  Icons.play_circle_fill,
                   size: iconSize,
                   color: Colors.black.withOpacity(0.7),
                 ),

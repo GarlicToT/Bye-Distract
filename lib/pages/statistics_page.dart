@@ -39,13 +39,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
       return;
     }
 
-    // 构建请求 URL 并打印
+    // Build request URL and print
     final requestUrl = Uri.parse('${ApiConfig.getStatisticsUrl}/$userId');
     print('🌐 Sending GET request to: $requestUrl');
 
     final response = await http.get(requestUrl);
 
-    // 打印响应基本信息
+    // Print response basic information
     print('🔍 Response status: ${response.statusCode}');
     print('📦 Response body: ${response.body}');
 

@@ -85,7 +85,7 @@ class _CountupPageState extends State<CountupPage> {
               child: Text('No'),
               onPressed: () {
                 Navigator.of(context).pop();
-                // 用户选择不开启摄像头时，只开始计时
+                // When the user chooses not to turn on the camera, only the timing starts
                 _startTimer();
               },
             ),
@@ -93,7 +93,7 @@ class _CountupPageState extends State<CountupPage> {
               child: Text('Yes'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                // 用户选择开启摄像头时，初始化摄像头并开始计时和录制
+                // When the user chooses to turn on the camera, initialize the camera and start timing and recording
                 await _initializeCamera();
                 _startTimer();
                 await _startRecording();
@@ -112,7 +112,7 @@ class _CountupPageState extends State<CountupPage> {
         _isRecording = false;
         _videoPath = video.path;
       });
-      // 这里可以添加保存视频路径到本地存储或服务器的逻辑
+      
     }
   }
 
@@ -283,15 +283,15 @@ class _CountupPageState extends State<CountupPage> {
           SizedBox(height: 32),
           Text(
             widget.taskTitle.toUpperCase(),
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Montserrat'),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Montserrat'),
           ),
           SizedBox(height: 24),
           Text(
             _formatTime(_elapsedSeconds),
-            style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, color: Colors.lightBlue[100], letterSpacing: 4),
+            style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.lightBlue[100], letterSpacing: 4),
           ),
           SizedBox(height: 8),
-          Text('Focusing', style: TextStyle(fontSize: 20)),
+          Text('Focusing', style: TextStyle(fontSize: 16)),
           SizedBox(height: 32),
           GestureDetector(
             onTap: _showCameraDialog,
@@ -308,13 +308,8 @@ class _CountupPageState extends State<CountupPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.black,
-                  child: Icon(Icons.pause, color: Colors.white, size: 32),
-                ),
                 GestureDetector(
                   onTap: _isRecording ? _stopRecording : _finishTask,
                   child: CircleAvatar(

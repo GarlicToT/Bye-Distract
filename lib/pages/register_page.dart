@@ -21,7 +21,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _register() async {
-    // 验证输入
+    // Verify the input
     if (usernameController.text.isEmpty || 
         emailController.text.isEmpty || 
         passwordController.text.isEmpty) {
@@ -31,7 +31,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // 验证邮箱格式
+    // Verify email format
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(emailController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,10 +58,10 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       if (response.statusCode == 200) {
-        // 解析响应数据
+        // Parse response data
         final responseData = jsonDecode(response.body);
         if (responseData != null && responseData['user_id'] != null) {
-          // 保存用户ID
+          // Save user ID
           await _saveUserId(responseData['user_id']);
           
           setState(() {
@@ -88,7 +88,7 @@ class _RegisterPageState extends State<RegisterPage> {
           );
         }
       } else if (response.statusCode == 422) {
-        // 格式错误
+        // Format error
         final errorData = jsonDecode(response.body);
         String errorMessage = 'Registration failed:';
         
@@ -114,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         );
       } else {
-        // 其他错误
+        // Other errors
         setState(() {
           _isLoading = false;
         });
@@ -162,7 +162,7 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: 8),
-              // 标题
+              // Title
               Center(
                 child: Text(
                   'Register',
@@ -174,7 +174,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               SizedBox(height: 24),
-              // 用户名输入框
+              // Username input box
               TextField(
                 controller: usernameController,
                 decoration: InputDecoration(
@@ -186,7 +186,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               SizedBox(height: 16),
-              // 邮箱输入框
+              // Email input box
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -198,7 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               SizedBox(height: 16),
-              // 密码输入框
+              // Password input box
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -211,7 +211,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               SizedBox(height: 32),
-              // 底部一行：左下返回，右下对勾
+              // Bottom row: left return, right check
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

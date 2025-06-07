@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../main.dart'; // 用于跳转到主页面
-import 'register_page.dart'; // 新增
+import '../main.dart'; // For navigation to main page
+import 'register_page.dart'; // Added
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,14 +27,14 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.remove('study_room_id');
     }
 
-    print('正在保存用户信息:');
-    print('user_id: $userId (类型: ${userId.runtimeType})');
-    print('user_name: $userName (类型: ${userName.runtimeType})');
-    print('study_room_id: $studyRoomId (类型: ${studyRoomId?.runtimeType})');
+    print('Saving user information:');
+    print('user_id: $userId (type: ${userId.runtimeType})');
+    print('user_name: $userName (type: ${userName.runtimeType})');
+    print('study_room_id: $studyRoomId (type: ${studyRoomId?.runtimeType})');
   }
 
   Future<void> _login() async {
-    // 验证输入
+    // Validate input
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please fill in all the required fields')),
@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['user_id'] != null) {
-        // 登录成功
+        // Login successful
         await _saveUserInfo(
           responseData['user_id'], 
           responseData['user_name'],
@@ -79,13 +79,13 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
         
-        // 跳转到主页面
+        // Navigate to main page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => GeneratorPage()),
         );
       } else {
-        // 登录失败
+        // Login failed
         setState(() {
           _isLoading = false;
         });

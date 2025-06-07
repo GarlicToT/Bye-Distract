@@ -28,7 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
     if (userId == null) {
-      print('未找到用户ID');
+      print('User ID not found');
       return;
     }
 
@@ -37,34 +37,34 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     try {
-      print('正在获取用户 ${userId} 的头像...');
+      print('Getting avatar for user ${userId}...');
       final avatarResponse = await http.post(
         Uri.parse('${ApiConfig.getAvatarUrl}/?user_ids=${userId.toString()}'),
         headers: {
           'accept': 'application/json',
         },
       );
-      print('头像请求状态码: ${avatarResponse.statusCode}');
-      print('头像响应原始数据: ${avatarResponse.body}');
-      print('获取头像响应内容: ${avatarResponse.body}');
+      print('Avatar request status code: ${avatarResponse.statusCode}');
+      print('Avatar response raw data: ${avatarResponse.body}');
+      print('Get avatar response content: ${avatarResponse.body}');
       
       if (avatarResponse.statusCode == 200) {
         final responseData = json.decode(avatarResponse.body);
-        print('解析后的响应数据: $responseData');
-        print('响应状态: ${responseData['status']}');
-        print('响应数据字段: ${responseData['data']}');
+        print('Parsed response data: $responseData');
+        print('Response status: ${responseData['status']}');
+        print('Response data field: ${responseData['data']}');
         
         if (responseData['status'] == 'success' && 
             responseData['data'] != null && 
             responseData['data'][userId.toString()] != null) {
           final avatarUrl = responseData['data'][userId.toString()];
-          print('获取到的头像URL: $avatarUrl');
+          print('Retrieved avatar URL: $avatarUrl');
           
           setState(() {
             _avatarUrl = avatarUrl;
           });
         } else {
-          print('用户没有头像或数据格式不正确');
+          print('User has no avatar or data format is incorrect');
           print('status: ${responseData['status']}');
           print('data: ${responseData['data']}');
           print('userId: $userId');
@@ -73,15 +73,15 @@ class _ProfilePageState extends State<ProfilePage> {
           });
         }
       } else {
-        print('获取头像失败: ${avatarResponse.statusCode}');
-        print('错误响应内容: ${avatarResponse.body}');
+        print('Failed to get avatar: ${avatarResponse.statusCode}');
+        print('Error response content: ${avatarResponse.body}');
         setState(() {
           _avatarUrl = null;
         });
       }
     } catch (e) {
-      print('获取头像时出错: $e');
-      print('错误堆栈: ${StackTrace.current}');
+      print('Error getting avatar: $e');
+      print('Error stack trace: ${StackTrace.current}');
       setState(() {
         _avatarUrl = null;
       });
@@ -90,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickAndUploadImage() async {
     try {
-      print('开始选择图片...');
+      print('Starting image selection...');
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
@@ -98,31 +98,31 @@ class _ProfilePageState extends State<ProfilePage> {
         maxHeight: 1024,
       );
       if (image == null) {
-        print('用户取消了图片选择');
+        print('User cancelled image selection');
         return;
       }
       
-      // 验证文件类型
+      // Validate file type
       final file = File(image.path);
       final bytes = await file.readAsBytes();
       if (bytes.length > 5 * 1024 * 1024) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('图片大小不能超过5MB')),
+          SnackBar(content: Text('Image size cannot exceed 5MB')),
         );
         return;
       }
 
-      print('已选择图片: ${image.path}');
+      print('Selected image: ${image.path}');
 
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('user_id');
       if (userId == null) {
-        print('错误：未找到用户ID');
+        print('Error: User ID not found');
         return;
       }
-      print('用户ID: $userId');
+      print('User ID: $userId');
 
-      print('开始创建multipart请求...');
+      print('Creating multipart request...');
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${ApiConfig.uploadAvatarUrl}?user_id=${userId.toString()}'),
@@ -132,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
         'Accept': 'application/json',
       });
 
-      print('正在添加图片文件到请求中...');
+      print('Adding image file to request...');
       request.files.add(
         http.MultipartFile.fromBytes(
           'photo',
@@ -141,48 +141,48 @@ class _ProfilePageState extends State<ProfilePage> {
           contentType: MediaType('image', 'jpeg'),
         ),
       );
-      print('图片文件已添加到请求中');
+      print('Image file added to request');
 
-      print('开始发送请求到服务器...');
+      print('Sending request to server...');
       var response = await request.send();
-      print('收到服务器响应，状态码: ${response.statusCode}');
+      print('Received server response, status code: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         var responseData = await response.stream.bytesToString();
-        print('上传头像响应内容: $responseData');
-        // 上传成功后重新加载用户信息
+        print('Upload avatar response content: $responseData');
+        // Reload user info after successful upload
         await _loadUserInfo();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('avatar uploaded successfully')),
+          SnackBar(content: Text('Avatar uploaded successfully')),
         );
       } else {
-        print('上传失败，状态码: ${response.statusCode}');
+        print('Upload failed, status code: ${response.statusCode}');
         var errorData = await response.stream.bytesToString();
-        print('错误响应数据: $errorData');
+        print('Error response data: $errorData');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('upload failed, please try again')),
+          SnackBar(content: Text('Upload failed, please try again')),
         );
       }
     } catch (e, stackTrace) {
-      print('发生未预期的错误: $e');
-      print('错误堆栈: $stackTrace');
+      print('Unexpected error occurred: $e');
+      print('Error stack trace: $stackTrace');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('发生错误：$e')),
+        SnackBar(content: Text('Error occurred: $e')),
       );
     }
   }
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    // 清除保存的用户信息
+    // Clear saved user information
     await prefs.remove('user_name');
     await prefs.remove('user_id');
     
-    // 返回登录页面
+    // Return to login page
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),
-      (route) => false, // 清除所有路由历史
+      (route) => false, // Clear all route history
     );
   }
 

@@ -15,7 +15,7 @@ class StudyRoomPage extends GeneratorPage {
 }
 
 class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClientMixin {
-  int _selectedIndex = 2; // 保持和GeneratorPage一致，2为Study Room
+  int _selectedIndex = 2; // Keep consistent with GeneratorPage, 2 is for Study Room
 
   @override
   bool get wantKeepAlive => true;
@@ -281,7 +281,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                               );
                               return;
                             }
-                            // 获取当前登录用户的user_id
+                            // Get current logged in user's user_id
                             SharedPreferences.getInstance().then((prefs) {
                               int? userId = prefs.getInt('user_id');
                               if (userId == null) {
@@ -290,7 +290,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                 );
                                 return;
                               }
-                              // 发送POST请求
+                              // Send POST request
                               http.post(
                                 Uri.parse(ApiConfig.createStudyRoomUrl),
                                 headers: {'Content-Type': 'application/json'},
@@ -302,16 +302,12 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                               ).then((response) {
                                 if (response.statusCode == 200) {
                                   final responseData = jsonDecode(response.body);
-                                  // 保存返回数据
-                                  prefs.setInt('creator_id', responseData['creator_id']);
-                                  prefs.setString('room_name', responseData['room_name']);
-                                  prefs.setString('room_description', responseData['room_description']);
-                                  prefs.setInt('room_id', responseData['room_id']);
-                                  // 更新study_room_id
+                                  // Save returned room_id
                                   prefs.setInt('study_room_id', responseData['room_id']);
-                                  // 关闭创建房间对话框
+                                  
+                                  // Close create room dialog
                                   Navigator.of(context).pop();
-                                  // 弹出成功提示框
+                                  // Show success dialog
                                   showDialog(
                                     context: context,
                                     builder: (context) => AlertDialog(
@@ -319,8 +315,12 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                       content: Text('Room created successfully! Would you like to enter the room now?', style: TextStyle(fontSize: 14)),
                                       actions: [
                                         TextButton(
-                                          onPressed: () {
+                                          onPressed: () async {
                                             Navigator.of(context).pop();
+                                            // Save study room information
+                                            await prefs.setString('room_name', responseData['room_name']);
+                                            await prefs.setString('room_description', responseData['room_description']);
+                                            setState(() {}); // Refresh page
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
@@ -331,6 +331,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                         TextButton(
                                           onPressed: () {
                                             Navigator.of(context).pop();
+                                            setState(() {}); // Refresh page
                                           },
                                           child: Text('Later', style: TextStyle(fontSize: 16)),
                                         ),
@@ -396,7 +397,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                   );
                   return;
                 }
-                // 获取user_id
+                // Get user_id
                 final prefs = await SharedPreferences.getInstance();
                 int? userId = prefs.getInt('user_id');
                 if (userId == null) {
@@ -405,7 +406,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                   );
                   return;
                 }
-                // 发送POST请求
+                // Send POST request
                 final response = await http.post(
                   Uri.parse('${ApiConfig.baseUrl}/study_room/join'),
                   headers: {'Content-Type': 'application/json'},
@@ -414,28 +415,23 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                     'room_id': int.tryParse(codeController.text),
                   }),
                 );
-                if (response.statusCode == 200) {
-                  try {
-                    final data = jsonDecode(response.body);
-                    if (data['room_id'] != null) {
-                      await prefs.setInt('study_room_id', data['room_id']);
-                      await prefs.setString('room_name', data['room_name']);
-                      await prefs.setString('room_description', data['room_description']);
-                      Navigator.of(context).pop(); // 关闭Dialog
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please enter a correct room code.')),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please enter a correct room code.')),
-                    );
-                  }
+                if (response.statusCode == 200 || 
+                    (response.statusCode == 400 && response.body.contains('User already in this study room'))) {
+                  final data = jsonDecode(response.body);
+                  // Save study room information
+                  await prefs.setInt('study_room_id', data['room_id']);
+                  await prefs.setString('room_name', data['room_name']);
+                  await prefs.setString('room_description', data['room_description']);
+                  Navigator.of(context).pop(); // Close Dialog
+                  setState(() {}); // Refresh page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
+                  );
+                } else if (response.statusCode == 404) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Invalid room ID, please check and try again')),
+                  );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to join room. Please try again.')),
@@ -498,7 +494,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       await prefs.remove('room_name');
                       await prefs.remove('room_description');
                       Navigator.of(context).pop();
-                      setState(() {}); // 刷新页面
+                      setState(() {}); // Refresh page
                     } else {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(

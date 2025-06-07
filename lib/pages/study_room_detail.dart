@@ -29,15 +29,21 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
 
   Future<void> _loadRoomInfo() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      roomName = prefs.getString('room_name') ?? '';
-      roomDescription = prefs.getString('room_description') ?? '';
-      roomId = prefs.getInt('room_id')?.toString() ?? '';
-      currentUserId = prefs.getInt('user_id');
-    });
+    final userId = prefs.getInt('user_id');
+    final studyRoomId = prefs.getInt('study_room_id');
 
-    print('加载的房间名称: $roomName');
-    print('加载的房间描述: $roomDescription');
+    print('Debug - userId: $userId');
+    print('Debug - studyRoomId: $studyRoomId');
+
+    if (userId == null || studyRoomId == null) {
+      print('User ID or Study Room ID not found');
+      return;
+    }
+
+    setState(() {
+      roomId = studyRoomId.toString();
+      currentUserId = userId;
+    });
 
     await _fetchLeaderboard();
   }
@@ -53,7 +59,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         return;
       }
 
-      print('开始获取排行榜数据...');
+      print('Fetching leaderboard data...');
       final response = await http.get(
         Uri.parse(ApiConfig.leaderboardStudyRoomUrl(studyRoomId, userId)),
       );
@@ -61,13 +67,21 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         List<dynamic> leaderboardData = data['leaderboard'];
-        print('成功获取排行榜数据，用户数量: ${leaderboardData.length}');
+        print('Successfully fetched leaderboard data, number of users: ${leaderboardData.length}');
         
-        // 获取所有用户的user_id
+        // Get study room information from leaderboard data
+        if (data['room_description'] != null) {
+          setState(() {
+            roomDescription = data['room_description'];
+            roomName = data['room_name'] ?? '';
+          });
+        }
+        
+        // Get all user IDs
         final userIds = leaderboardData.map((user) => user['user_id'].toString()).join(',');
-        print('准备获取用户头像，用户ID列表: $userIds');
+        print('Preparing to fetch user avatars, user ID list: $userIds');
 
-        // 批量获取头像
+        // Batch fetch avatars
         try {
           final avatarResponse = await http.post(
             Uri.parse('${ApiConfig.getAvatarUrl}/?user_ids=$userIds'),
@@ -75,8 +89,8 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
               'accept': 'application/json',
             },
           );
-          print('头像请求状态码: ${avatarResponse.statusCode}');
-          print('头像响应数据: ${avatarResponse.body}');
+          print('Avatar request status code: ${avatarResponse.statusCode}');
+          print('Avatar response data: ${avatarResponse.body}');
           
           if (avatarResponse.statusCode == 200) {
             final avatarData = jsonDecode(avatarResponse.body);
@@ -84,13 +98,13 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
               setState(() {
                 userAvatars = Map<String, String?>.from(avatarData['data']);
               });
-              print('成功获取用户头像数据');
+              print('Successfully fetched user avatar data');
             }
           } else {
-            print('获取头像失败: ${avatarResponse.statusCode}');
+            print('Failed to fetch avatars: ${avatarResponse.statusCode}');
           }
         } catch (e) {
-          print('获取头像时出错: $e');
+          print('Error fetching avatars: $e');
         }
 
         setState(() {
@@ -98,12 +112,12 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           currentUser = data['current_user'];
           isLoading = false;
         });
-        print('排行榜数据更新完成');
+        print('Leaderboard data update completed');
       } else {
-        print('获取排行榜失败，状态码: ${response.statusCode}');
+        print('Failed to fetch leaderboard, status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('获取排行榜数据时出错: $e');
+      print('Error fetching leaderboard data: $e');
     }
   }
 
