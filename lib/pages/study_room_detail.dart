@@ -35,6 +35,10 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       roomId = prefs.getInt('room_id')?.toString() ?? '';
       currentUserId = prefs.getInt('user_id');
     });
+
+    print('加载的房间名称: $roomName');
+    print('加载的房间描述: $roomDescription');
+
     await _fetchLeaderboard();
   }
 
@@ -121,7 +125,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         ),
         title: Text('Study Room', style: TextStyle(
           color: Colors.white,
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         )),
         backgroundColor: Color(0xFFAED3EA),
@@ -130,7 +134,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.settings, color: Colors.black, size: 28),
+            child: Icon(Icons.settings, color: Colors.black, size: 24),
           ),
         ],
       ),
@@ -146,7 +150,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                       children: [
                         Row(
                           children: [
-                            Text(roomName, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                            Text(roomName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                             SizedBox(width: 12),
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -154,24 +158,24 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                                 color: Color(0xFFFFE6A0),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Text('${leaderboard.length} persons', style: TextStyle(color: Color(0xFFB88A00), fontWeight: FontWeight.bold, fontSize: 14)),
+                              child: Text('${leaderboard.length} persons', style: TextStyle(color: Color(0xFFB88A00), fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
                           ],
                         ),
                         SizedBox(height: 4),
-                        Text('(Room Code: $roomId)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                        Text('(Room Code: $roomId)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                         SizedBox(height: 4),
-                        Text(roomDescription, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                        Text(roomDescription, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
                         SizedBox(height: 12),
                         Row(
                           children: [
-                            Text('${leaderboard.where((user) => user['duration'] > 0).length}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                            Text('${leaderboard.where((user) => user['duration'] > 0).length}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                             SizedBox(width: 4),
-                            Text('Focusing', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                            Text('Focusing', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
                             SizedBox(width: 24),
-                            Text('${currentUser?['rank'] ?? 0}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                            Text('${currentUser?['rank'] ?? 0}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                             SizedBox(width: 4),
-                            Text('Your Rank', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                            Text('Your Rank', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
                           ],
                         ),
                         SizedBox(height: 16),
@@ -210,11 +214,11 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         children: [
           Column(
             children: [
-              Text('${user['rank']}', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              Text('${user['rank']}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Container(
-                width: 48,
-                height: 48,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   shape: BoxShape.circle,
@@ -223,15 +227,15 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                     ? ClipOval(
                         child: Image.network(
                           avatarUrl,
-                          width: 48,
-                          height: 48,
+                          width: 40,
+                          height: 40,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.person, size: 32, color: Colors.grey[400]);
+                            return Icon(Icons.person, size: 28, color: Colors.grey[400]);
                           },
                         ),
                       )
-                    : Icon(Icons.person, size: 32, color: Colors.grey[400]),
+                    : Icon(Icons.person, size: 28, color: Colors.grey[400]),
               ),
             ],
           ),
@@ -240,9 +244,9 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user['name'], style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                Text(user['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 4),
-                Text('Focused Today: ${_formatDuration(user['duration'])} min', style: TextStyle(fontSize: 16)),
+                Text('Focused Today: ${_formatDuration(user['duration'])} min', style: TextStyle(fontSize: 14)),
                 SizedBox(height: 8),
                 Row(
                   children: [
@@ -252,7 +256,11 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                         color: Color(0xFFFF8A8A),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text('Focus Streak: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      child: Text(
+                        'Focus\nStreak: 0 days',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     SizedBox(width: 8),
                     Container(
@@ -261,7 +269,11 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                         color: Color(0xFFD6B4FF),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text('Total focus: 0 days', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      child: Text(
+                        'Total\nfocus: 0 days',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ],
                 ),
@@ -271,8 +283,8 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           SizedBox(width: 8),
           Column(
             children: [
-              Text(_formatDuration(user['duration']), style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.grey[700])),
-              Text('min', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+              Text(_formatDuration(user['duration']), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+              Text('min', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
             ],
           ),
         ],

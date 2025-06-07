@@ -93,8 +93,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
     final padding = screenSize.width * 0.04;
-    final fontSize = isTablet ? 24.0 : 20.0;
-    final subtitleFontSize = isTablet ? 16.0 : 14.0;
+    final fontSize = isTablet ? 20.0 : 16.0;
+    final subtitleFontSize = isTablet ? 14.0 : 12.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -116,26 +116,35 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchStatistics,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.5),
-                child: Column(
-                  children: [
-                    _buildTotalCard(fontSize, subtitleFontSize),
-                    SizedBox(height: padding),
-                    _buildTodayCard(fontSize, subtitleFontSize),
-                    SizedBox(height: padding),
-                    _buildDistributionCard(fontSize, subtitleFontSize),
-                    SizedBox(height: padding),
-                    _buildTimePeriodCard(fontSize, subtitleFontSize),
-                    SizedBox(height: padding), // 底部额外padding
-                  ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background.png'),
+            fit: BoxFit.cover,
+            opacity: 1.0,
+          ),
+        ),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _fetchStatistics,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.5),
+                  child: Column(
+                    children: [
+                      _buildTotalCard(fontSize, subtitleFontSize),
+                      SizedBox(height: padding),
+                      _buildTodayCard(fontSize, subtitleFontSize),
+                      SizedBox(height: padding),
+                      _buildDistributionCard(fontSize, subtitleFontSize),
+                      SizedBox(height: padding),
+                      _buildTimePeriodCard(fontSize, subtitleFontSize),
+                      SizedBox(height: padding),
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -175,11 +184,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
     List<PieChartSectionData> sections = [];
     final colors = [
-      Color(0xFFFFD6D6),
-      Color(0xFFBFDDBE),
-      Color(0xFFAED3EA),
-      Color(0xFFFFF3B0),
-      Color(0xFFD8BFD8),
+      Color(0xFF166DA6),
+      Color(0xFF58C0DB),
+      Color(0xFFB5D5DA),
     ];
 
     int colorIndex = 0;
@@ -208,11 +215,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
       padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white.withOpacity(0.0), Color(0xA06CC6DF)],
         ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Color(0xFFE0E0E0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,11 +302,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
       padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white.withOpacity(0.0), Color(0xA06CC6DF)],
         ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Color(0xFFE0E0E0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,7 +374,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         barRods: [
           BarChartRodData(
             toY: focusRatio,
-            color: Color(0xFFFF9E9E),
+            color: Color(0xFF58C0DB),
             width: 20,
             borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
           ),
@@ -363,11 +386,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
       padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE6E6), Color(0xFFFF9E9E)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white.withOpacity(0.0), Color(0xA06CC6DF)],
         ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Color(0xFFE0E0E0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,7 +407,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Task focus ratio distribution (Top 5)',
+                'Task focus ratio (Today Top 5)',
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,

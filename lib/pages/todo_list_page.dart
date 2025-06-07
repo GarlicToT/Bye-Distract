@@ -429,7 +429,7 @@ class _TodoListPageState extends State<TodoListPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Modify Task Mode'),
+              title: Text('Modify Task Mode', style: TextStyle(fontSize: 18)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -452,8 +452,9 @@ class _TodoListPageState extends State<TodoListPage> {
                               : Colors.grey[300],
                         ),
                         onPressed: () => setState(() => mode = 'count down'),
-                        child: Text('count down', 
+                        child: Text('count down',
                           style: TextStyle(
+                            fontSize: 12,
                             color: mode == 'count down' ? Colors.white : Colors.black
                           )
                         ),
@@ -465,8 +466,9 @@ class _TodoListPageState extends State<TodoListPage> {
                               : Colors.grey[300],
                         ),
                         onPressed: () => setState(() => mode = 'count up'),
-                        child: Text('count up', 
+                        child: Text('count up',
                           style: TextStyle(
+                            fontSize: 12,
                             color: mode == 'count up' ? Colors.white : Colors.black
                           )
                         ),
@@ -475,7 +477,7 @@ class _TodoListPageState extends State<TodoListPage> {
                   ),
                   if (mode == 'count down') ...[
                     SizedBox(height: 16),
-                    Text('${countdownTimeSliderValue.toInt()} minutes'),
+                    Text('${countdownTimeSliderValue.toInt()} minutes', style: TextStyle(fontSize: 14)),
                     Slider(
                       min: 5,
                       max: 60,
@@ -489,20 +491,20 @@ class _TodoListPageState extends State<TodoListPage> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                  child: Text('Delete', style: TextStyle(color: Colors.red, fontSize: 14)),
                   onPressed: () {
                     Navigator.of(context).pop();
                     _showDeleteConfirmationDialog(task);
                   },
                 ),
                 TextButton(
-                  child: Text('Cancel'),
+                  child: Text('Cancel', style: TextStyle(fontSize: 14)),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.check_circle_outline),
+                  icon: Icon(Icons.check_circle_outline, size: 20),
                   onPressed: () {
                     Navigator.of(context).pop();
                     _modifyTask(

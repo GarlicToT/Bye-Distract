@@ -251,19 +251,19 @@ class _ProfilePageState extends State<ProfilePage> {
         _buildOptionCard(
           icon: Icons.person,
           title: 'Profile',
-          color: Color(0xFFFFE6E6),
+          color: Color(0xFFE6E6FA),
         ),
         SizedBox(height: 16),
         _buildOptionCard(
           icon: Icons.check_circle,
           title: 'Whitelist',
-          color: Color(0xFFBFDDBE),
+          color: Color(0xFFFFD6D6),
         ),
         SizedBox(height: 16),
         _buildOptionCard(
           icon: Icons.logout,
           title: 'Log out',
-          color: Color(0xFFFFE0B2), // 使用暖色调，与现有配色方案相协调
+          color: Color(0xFF9CCCf0),
           onTap: _logout,
         ),
       ],

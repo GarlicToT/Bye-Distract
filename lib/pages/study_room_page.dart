@@ -200,13 +200,13 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                     topRight: Radius.circular(24),
                   ),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 24),
+                padding: EdgeInsets.symmetric(vertical: 20),
                 child: Center(
                   child: Text(
                     'Create Study Room',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 28,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -217,7 +217,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Room Name', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+                    Text('Room Name', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
                     SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -234,14 +234,14 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       child: TextField(
                         controller: nameController,
                         decoration: InputDecoration(
-                          hintText: 'Please enter...',
+                          hintText: 'Enter room name',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
                       ),
                     ),
                     SizedBox(height: 24),
-                    Text('Room Description', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+                    Text('Room Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
                     SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -259,7 +259,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                         controller: descController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'Please enter...',
+                          hintText: 'Enter room description',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
@@ -271,13 +271,13 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       children: [
                         GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
-                          child: Text('cancel', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          child: Text('Cancel', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         ),
                         GestureDetector(
                           onTap: () {
                             if (nameController.text.isEmpty || descController.text.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Please fill in all fields')),
+                                SnackBar(content: Text('Please fill in all fields.')),
                               );
                               return;
                             }
@@ -286,13 +286,13 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                               int? userId = prefs.getInt('user_id');
                               if (userId == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('User ID not found')),
+                                  SnackBar(content: Text('User ID not found. Please log in.')),
                                 );
                                 return;
                               }
                               // 发送POST请求
                               http.post(
-                                Uri.parse(ApiConfig.createStudyRoomUrl), // 使用 ApiConfig 的配置 // 替换为实际的后端URL
+                                Uri.parse(ApiConfig.createStudyRoomUrl),
                                 headers: {'Content-Type': 'application/json'},
                                 body: jsonEncode({
                                   'user_id': userId,
@@ -315,8 +315,8 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                   showDialog(
                                     context: context,
                                     builder: (context) => AlertDialog(
-                                      title: Text('Success'),
-                                      content: Text('Room created successfully!'),
+                                      title: Text('Success', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                      content: Text('Room created successfully! Would you like to enter the room now?', style: TextStyle(fontSize: 14)),
                                       actions: [
                                         TextButton(
                                           onPressed: () {
@@ -326,24 +326,30 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                               MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
                                             );
                                           },
-                                          child: Text('Enter the room'),
+                                          child: Text('Enter Room', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('Later', style: TextStyle(fontSize: 16)),
                                         ),
                                       ],
                                     ),
                                   );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to create room')),
+                                    SnackBar(content: Text('Failed to create room. Please try again.')),
                                   );
                                 }
                               }).catchError((error) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $error')),
+                                  SnackBar(content: Text('Error creating room: $error')),
                                 );
                               });
                             });
                           },
-                          child: Text('Create', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          child: Text('Create', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -370,13 +376,13 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Join Room', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            Text('Join Room', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 24),
             TextField(
               controller: codeController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                hintText: 'Enter Room Code',
+                hintText: 'Enter room code',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
@@ -386,7 +392,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
               onTap: () async {
                 if (codeController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('please enter room code')),
+                    SnackBar(content: Text('Please enter room code.')),
                   );
                   return;
                 }
@@ -395,7 +401,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                 int? userId = prefs.getInt('user_id');
                 if (userId == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('User not logged in')),
+                    SnackBar(content: Text('User not logged in.')),
                   );
                   return;
                 }
@@ -422,21 +428,21 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('please enter correct room code')),
+                        SnackBar(content: Text('Please enter a correct room code.')),
                       );
                     }
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('please enter correct room code')),
+                      SnackBar(content: Text('Please enter a correct room code.')),
                     );
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('please enter correct room code')),
+                    SnackBar(content: Text('Failed to join room. Please try again.')),
                   );
                 }
               },
-              child: Text('Join', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              child: Text('Join', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -456,7 +462,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Are you sure you want to leave this study room?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Are you sure you want to leave this study room?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -465,7 +471,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('No', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  child: Text('No', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -475,7 +481,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                     if (userId == null || roomId == null) {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('User or room info not found')),
+                        SnackBar(content: Text('User or room info not found.')),
                       );
                       return;
                     }
@@ -496,11 +502,11 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                     } else {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to leave room')),
+                        SnackBar(content: Text('Failed to leave room. Please try again.')),
                       );
                     }
                   },
-                  child: Text('Yes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  child: Text('Yes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
