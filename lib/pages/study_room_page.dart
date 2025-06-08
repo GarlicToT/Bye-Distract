@@ -9,6 +9,37 @@ import 'statistics_page.dart';
 import 'profile_page.dart';
 import '../main.dart';
 
+// Custom Clipper for the top-left triangle
+class TopLeftTriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(size.width, 0); // Top-right corner
+    path.lineTo(0, size.height); // Bottom-left corner
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+// Custom Clipper for the bottom-right triangle
+class BottomRightTriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(size.width, size.height); // Bottom-right corner
+    path.lineTo(0, size.height); // Bottom-left corner
+    path.lineTo(size.width, 0); // Top-right corner
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
 class StudyRoomPage extends GeneratorPage {
   @override
   _StudyRoomPageState createState() => _StudyRoomPageState();
@@ -43,75 +74,77 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Study Room', style: _appBarTitleStyle),
-        backgroundColor: Color(0xFFAED3EA),
+        backgroundColor: Color(0xFF93BDCE),
         elevation: 0,
         centerTitle: true,
       ),
-      body: FutureBuilder<int?>(
-        future: _getStudyRoomId(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else {
-            final hasStudyRoom = snapshot.hasData && snapshot.data != null;
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (hasStudyRoom) ...[
-                    _buildCircularButton(
-                      icon: Icons.visibility,
-                      label: 'View My Room',
-                      color: Color(0xFFFFD6D6),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 40),
-                    _buildCircularButton(
-                      icon: Icons.exit_to_app,
-                      label: 'Leave My Room',
-                      color: Color(0xFFAED3EA),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => _buildLeaveRoomDialog(context),
-                        );
-                      },
-                    ),
-                  ] else ...[
-                    _buildCircularButton(
-                      icon: Icons.add,
-                      label: 'Create Room',
-                      color: Color(0xFFFFD6D6),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => _buildCreateRoomDialog(context),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 40),
-                    _buildCircularButton(
-                      icon: Icons.home,
-                      label: 'Join Room',
-                      color: Color(0xFFAED3EA),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => _buildJoinRoomDialog(context),
-                        );
-                      },
-                    ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/studyroom.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: FutureBuilder<int?>(
+          future: _getStudyRoomId(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              final hasStudyRoom = snapshot.hasData && snapshot.data != null;
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (hasStudyRoom) ...[
+                      _buildCombinedActionSquare(
+                        topLeftIcon: Icons.visibility,
+                        topLeftLabel: 'View My Room',
+                        topLeftColor: Color(0xFF67988A),
+                        onTopLeftPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
+                          );
+                        },
+                        bottomRightIcon: Icons.exit_to_app,
+                        bottomRightLabel: 'Leave My Room',
+                        bottomRightColor: Color(0xFF4194BC),
+                        onBottomRightPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => _buildLeaveRoomDialog(context),
+                          );
+                        },
+                      ),
+                    ] else ...[
+                      _buildCombinedActionSquare(
+                        topLeftIcon: Icons.add,
+                        topLeftLabel: 'Create Room',
+                        topLeftColor: Color(0xFF67988A),
+                        onTopLeftPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => _buildCreateRoomDialog(context),
+                          );
+                        },
+                        bottomRightIcon: Icons.home,
+                        bottomRightLabel: 'Join Room',
+                        bottomRightColor: Color(0xFF4194BC),
+                        onBottomRightPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => _buildJoinRoomDialog(context),
+                          );
+                        },
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            );
-          }
-        },
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -121,57 +154,121 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
     return prefs.getInt('study_room_id');
   }
 
-  Widget _buildCircularButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
+  // New widget for the combined square button
+  Widget _buildCombinedActionSquare({
+    required IconData topLeftIcon,
+    required String topLeftLabel,
+    required Color topLeftColor,
+    required VoidCallback onTopLeftPressed,
+    required IconData bottomRightIcon,
+    required String bottomRightLabel,
+    required Color bottomRightColor,
+    required VoidCallback onBottomRightPressed,
   }) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onPressed,
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(icon, color: Colors.white, size: 32),
-                  SizedBox(height: 8),
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+    const double width = 280; // Width remains the same
+    const double height = 380; // Increased height for a rectangular shape
+    const double iconSize = 60; // Increased icon size
+    const double fontSize = 20; // Adjusted font size for labels
+
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            topLeftColor.withOpacity(0.8),
+            bottomRightColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: [0.5, 0.5],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 15,
+            offset: Offset(0, 8),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(60),
+      ),
+      child: Stack(
+        children: [
+          // Bottom-right triangle
+          Positioned.fill(
+            child: ClipPath(
+              clipper: BottomRightTriangleClipper(),
+              child: GestureDetector(
+                onTap: onBottomRightPressed,
+                child: Container(
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20.0, 20.0, 40.0, 40.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Icon(bottomRightIcon, color: Colors.white, size: iconSize),
+                          SizedBox(height: 15),
+                          Text(
+                            bottomRightLabel,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: fontSize,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+          // Top-left triangle
+          Positioned.fill(
+            child: ClipPath(
+              clipper: TopLeftTriangleClipper(),
+              child: GestureDetector(
+                onTap: onTopLeftPressed,
+                child: Container(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(40.0, 40.0, 20.0, 20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            topLeftLabel,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: fontSize,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          Icon(topLeftIcon, color: Colors.white, size: iconSize),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   final TextStyle _appBarTitleStyle = TextStyle(
-    color: Colors.black,
+    color: Colors.white,
     fontSize: 20,
     fontWeight: FontWeight.w500,
   );
@@ -185,7 +282,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
         child: Container(
           padding: EdgeInsets.all(0),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Color(0xFF93BDCE),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
@@ -194,7 +291,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color(0xFFAED3EA),
+                  color: Color(0xFF417D74),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
@@ -217,7 +314,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Room Name', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                    Text('Room Name', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white)),
                     SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -241,7 +338,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       ),
                     ),
                     SizedBox(height: 24),
-                    Text('Room Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                    Text('Room Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white)),
                     SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -271,7 +368,14 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       children: [
                         GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
-                          child: Text('Cancel', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF417D74),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('Cancel', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
@@ -326,14 +430,14 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                               MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
                                             );
                                           },
-                                          child: Text('Enter Room', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                          child: Text('Enter Room', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF417D74))), // Changed color
                                         ),
                                         TextButton(
                                           onPressed: () {
                                             Navigator.of(context).pop();
                                             setState(() {}); // Refresh page
                                           },
-                                          child: Text('Later', style: TextStyle(fontSize: 16)),
+                                          child: Text('Later', style: TextStyle(fontSize: 16, color: Color(0xFF417D74))), // Changed color
                                         ),
                                       ],
                                     ),
@@ -350,7 +454,14 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                               });
                             });
                           },
-                          child: Text('Create', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF417D74),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('Create', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
                         ),
                       ],
                     ),
@@ -371,13 +482,13 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
       child: Container(
         padding: EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF93BDCE),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Join Room', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text('Join Room', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
             SizedBox(height: 24),
             TextField(
               controller: codeController,
@@ -386,6 +497,8 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                 hintText: 'Enter room code',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
             SizedBox(height: 32),
@@ -438,7 +551,14 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                   );
                 }
               },
-              child: Text('Join', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Color(0xFF417D74),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('Join', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
             ),
           ],
         ),
@@ -452,25 +572,32 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
       child: Container(
         padding: EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF93BDCE),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Are you sure you want to leave this study room?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Are you sure you want to leave this study room?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('No', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF417D74),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('No', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
-                TextButton(
-                  onPressed: () async {
+                GestureDetector(
+                  onTap: () async {
                     final prefs = await SharedPreferences.getInstance();
                     int? userId = prefs.getInt('user_id');
                     int? roomId = prefs.getInt('study_room_id');
@@ -502,7 +629,14 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                       );
                     }
                   },
-                  child: Text('Yes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF417D74),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('Yes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
               ],
             ),

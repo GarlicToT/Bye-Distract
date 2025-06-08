@@ -132,7 +132,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
+          icon: Icon(Icons.arrow_back, color: Colors.white, size: 28),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -142,64 +142,116 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         )),
-        backgroundColor: Color(0xFFAED3EA),
+        backgroundColor: Color(0xFF98CCBB),
         elevation: 0,
         centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.settings, color: Colors.black, size: 24),
+            child: Icon(Icons.settings, color: Colors.white, size: 24),
           ),
         ],
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/leaderboard.jpg'),
+                  fit: BoxFit.fill,
+                ),
+              ),
+              child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(roomName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                            SizedBox(width: 12),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFFFE6A0),
-                                borderRadius: BorderRadius.circular(6),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+                          padding: const EdgeInsets.all(20.0),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF98CCBB).withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(roomName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF329363))),
+                                  SizedBox(width: 12),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF68A530).withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text('${leaderboard.length} persons', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  ),
+                                ],
                               ),
-                              child: Text('${leaderboard.length} persons', style: TextStyle(color: Color(0xFFB88A00), fontWeight: FontWeight.bold, fontSize: 12)),
-                            ),
-                          ],
+                              SizedBox(height: 4),
+                              Text('(Room Code: $roomId)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
+                              SizedBox(height: 4),
+                              Text(roomDescription, style: TextStyle(fontSize: 14, color: Colors.white)),
+                              SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF68A530).withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('${leaderboard.where((user) => user['duration'] > 0).length}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                        SizedBox(width: 4),
+                                        Text('Focusing', style: TextStyle(fontSize: 14, color: Colors.white)),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 24),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF68A530).withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('${currentUser?['rank'] ?? 0}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                        SizedBox(width: 4),
+                                        Text('Your Rank', style: TextStyle(fontSize: 14, color: Colors.white)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(height: 4),
-                        Text('(Room Code: $roomId)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                        SizedBox(height: 4),
-                        Text(roomDescription, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-                        SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Text('${leaderboard.where((user) => user['duration'] > 0).length}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            SizedBox(width: 4),
-                            Text('Focusing', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-                            SizedBox(width: 24),
-                            Text('${currentUser?['rank'] ?? 0}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            SizedBox(width: 4),
-                            Text('Your Rank', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-                          ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 16),
+                              ...leaderboard.map((user) => _buildUserCard(user)).toList(),
+                            ],
+                          ),
                         ),
-                        SizedBox(height: 16),
-                        ...leaderboard.map((user) => _buildUserCard(user)).toList(),
                       ],
                     ),
                   ),
-                ],
-              ),
             ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -213,7 +265,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
       margin: EdgeInsets.only(top: 8),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFFFE6E6),
+        color: Color(0xFF329363).withOpacity(0.7),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -228,13 +280,13 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
         children: [
           Column(
             children: [
-              Text('${user['rank']}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('${user['rank']}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
               SizedBox(height: 8),
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: Color(0xFF98CCBB).withOpacity(0.7),
                   shape: BoxShape.circle,
                 ),
                 child: avatarUrl != null
@@ -245,11 +297,11 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                           height: 40,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.person, size: 28, color: Colors.grey[400]);
+                            return Icon(Icons.person, size: 28, color: Colors.white);
                           },
                         ),
                       )
-                    : Icon(Icons.person, size: 28, color: Colors.grey[400]),
+                    : Icon(Icons.person, size: 28, color: Colors.white),
               ),
             ],
           ),
@@ -258,16 +310,16 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(user['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 SizedBox(height: 4),
-                Text('Focused Today: ${_formatDuration(user['duration'])} min', style: TextStyle(fontSize: 14)),
+                Text('Focused Today: ${_formatDuration(user['duration'])} min', style: TextStyle(fontSize: 14, color: Colors.white)),
                 SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFF8A8A),
+                        color: Color(0xFF80BC6B).withOpacity(0.7),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -280,7 +332,7 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Color(0xFFD6B4FF),
+                        color: Color(0xFF98ccbb).withOpacity(0.7),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -297,8 +349,8 @@ class _StudyRoomDetailPageState extends State<StudyRoomDetailPage> {
           SizedBox(width: 8),
           Column(
             children: [
-              Text(_formatDuration(user['duration']), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey[700])),
-              Text('min', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+              Text(_formatDuration(user['duration']), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('min', style: TextStyle(fontSize: 14, color: Colors.white)),
             ],
           ),
         ],
