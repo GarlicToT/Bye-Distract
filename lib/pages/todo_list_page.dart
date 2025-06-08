@@ -304,13 +304,14 @@ class _TodoListPageState extends State<TodoListPage> {
               ),
               child: Container(
                 padding: EdgeInsets.all(16),
+                color: Color(0xFF95B0B6),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
                         GestureDetector(
-                          child: Icon(Icons.close),
+                          child: Icon(Icons.close, color: Colors.white),
                           onTap: () => Navigator.pop(context),
                         ),
                         Expanded(
@@ -318,12 +319,12 @@ class _TodoListPageState extends State<TodoListPage> {
                             child: Text(
                               'Add List',
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                  fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),
                         ),
                         GestureDetector(
-                          child: Icon(Icons.check),
+                          child: Icon(Icons.check, color: Colors.white),
                           onTap: () async {
                             if (title.trim().isNotEmpty) {
                               await _addTaskToServer(
@@ -355,28 +356,28 @@ class _TodoListPageState extends State<TodoListPage> {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: mode == 'count down'
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[300],
+                                ? Color(0xFF9CCCCE)
+                                : Color(0xFF788682),
                           ),
                           onPressed: () =>
                               setModalState(() => mode = 'count down'),
-                          child: Text('count down', style: TextStyle(color: mode == 'count down' ? Colors.white : Colors.black)),
+                          child: Text('count down', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: mode == 'count up'
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[300],
+                                ? Color(0xFF9CCCCE)
+                                : Color(0xFF788682),
                           ),
                           onPressed: () =>
                               setModalState(() => mode = 'count up'),
-                          child: Text('count up', style: TextStyle(color: mode == 'count up' ? Colors.white : Colors.black)),
+                          child: Text('count up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
                     if (mode == 'count down') ...[
                       SizedBox(height: 10),
-                      Text('${countdownTimeSliderValue.toInt()} minutes'),
+                      Text('${countdownTimeSliderValue.toInt()} minutes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                       Slider(
                         min: 5,
                         max: 60,
@@ -385,6 +386,7 @@ class _TodoListPageState extends State<TodoListPage> {
                         label: '${countdownTimeSliderValue.toInt()} min',
                         onChanged: (val) =>
                             setModalState(() => countdownTimeSliderValue = val),
+                        activeColor: Color(0xFF9CCCCE),
                       ),
                     ]
                   ],
@@ -398,21 +400,29 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   Color _getTaskColor(Task task) {
+    // Define colors using the provided color palette with added transparency (0xD0 alpha)
     final colors = [
-      Color(0xFFAED3EA), Color(0xFFBFDDBE), Color(0xFFFFD6D6), 
-      Color(0xFFFFFACD), Color(0xFFE6E6FA), Color(0xFFFFE4E1)
+      Color(0xD095B0B6), // Soft blue-gray with transparency
+      Color(0xD09CCCCE), // Light teal with transparency
+      Color(0xD0DABFAE), // Soft peach with transparency
+      Color(0xD08FA069), // Sage green with transparency
+      Color(0xD07C94A5), // Muted blue with transparency
+      Color(0xD0788682), // Gray-green with transparency
     ];
+    
     int taskIndex = _tasks.indexWhere((t) => t.taskId == task.taskId);
     if (taskIndex != -1) {
       return colors[taskIndex % colors.length];
     }
+    
+    // Specific colors for IELTS tasks with transparency
     switch (task.title.toLowerCase()) {
       case 'ielts speaking':
-        return Color(0xFFAED3EA);
+        return Color(0xD095B0B6); // Soft blue-gray with transparency
       case 'ielts listening':
-        return Color(0xFFBFDDBE);
+        return Color(0xD08FA069); // Sage green with transparency
       case 'ielts reading':
-        return Color(0xFFFFD6D6);
+        return Color(0xD0DABFAE); // Soft peach with transparency
       default:
         return colors[task.title.hashCode % colors.length];
     }
@@ -429,7 +439,8 @@ class _TodoListPageState extends State<TodoListPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Modify Task Mode', style: TextStyle(fontSize: 18)),
+              backgroundColor: Color(0xFF788682),
+              title: Text('Modify Task Mode', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -437,6 +448,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     controller: titleController,
                     decoration: InputDecoration(
                       labelText: 'Task Title',
+                      labelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
@@ -448,28 +460,30 @@ class _TodoListPageState extends State<TodoListPage> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: mode == 'count down'
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey[300],
+                              ? Color(0xFF9CCCCE)
+                              : Color(0xFF95B0B6),
                         ),
                         onPressed: () => setState(() => mode = 'count down'),
                         child: Text('count down',
                           style: TextStyle(
                             fontSize: 12,
-                            color: mode == 'count down' ? Colors.white : Colors.black
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           )
                         ),
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: mode == 'count up'
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey[300],
+                              ? Color(0xFF9CCCCE)
+                              : Color(0xFF95B0B6),
                         ),
                         onPressed: () => setState(() => mode = 'count up'),
                         child: Text('count up',
                           style: TextStyle(
                             fontSize: 12,
-                            color: mode == 'count up' ? Colors.white : Colors.black
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           )
                         ),
                       ),
@@ -477,7 +491,7 @@ class _TodoListPageState extends State<TodoListPage> {
                   ),
                   if (mode == 'count down') ...[
                     SizedBox(height: 16),
-                    Text('${countdownTimeSliderValue.toInt()} minutes', style: TextStyle(fontSize: 14)),
+                    Text('${countdownTimeSliderValue.toInt()} minutes', style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
                     Slider(
                       min: 5,
                       max: 60,
@@ -485,26 +499,27 @@ class _TodoListPageState extends State<TodoListPage> {
                       divisions: 11,
                       label: '${countdownTimeSliderValue.toInt()} min',
                       onChanged: (val) => setState(() => countdownTimeSliderValue = val),
+                      activeColor: Color(0xFF9CCCCE),
                     ),
                   ],
                 ],
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Delete', style: TextStyle(color: Colors.red, fontSize: 14)),
+                  child: Text('Delete', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                   onPressed: () {
                     Navigator.of(context).pop();
                     _showDeleteConfirmationDialog(task);
                   },
                 ),
                 TextButton(
-                  child: Text('Cancel', style: TextStyle(fontSize: 14)),
+                  child: Text('Cancel', style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.check_circle_outline, size: 20),
+                  icon: Icon(Icons.check_circle_outline, size: 20, color: Colors.white),
                   onPressed: () {
                     Navigator.of(context).pop();
                     _modifyTask(
@@ -559,37 +574,60 @@ class _TodoListPageState extends State<TodoListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Tasks'),
+        backgroundColor: Color(0xFF9CCCCE),
+        title: Text('My Tasks', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: Colors.white),
             onPressed: _fetchTasks,
           ),
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.add, color: Colors.white),
             onPressed: _showAddTaskModal,
           )
         ],
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.all(padding),
-              child: ListView(
-                children: [
-                  _buildTrainingTaskCard(),
-                  ..._tasks.map((task) => _buildTaskCard(task)).toList(),
-                ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/screen.jpg'),
+            fit: BoxFit.cover,
+            opacity: 0.6,
+          ),
+        ),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  children: [
+                    _buildTrainingTaskCard(),
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: padding * 0.5,
+                          mainAxisSpacing: padding * 0.3,
+                        ),
+                        itemCount: _tasks.length,
+                        itemBuilder: (context, index) {
+                          return _buildTaskCard(_tasks[index]);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 
   Widget _buildTrainingTaskCard() {
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
-    final fontSize = isTablet ? 16.0 : 14.0;
-    final iconSize = isTablet ? 32.0 : 28.0;
+    final fontSize = isTablet ? 20.0 : 18.0;
+    final iconSize = isTablet ? 40.0 : 32.0;
     final padding = screenSize.width * 0.03;
 
     return GestureDetector(
@@ -598,17 +636,24 @@ class _TodoListPageState extends State<TodoListPage> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
+              backgroundColor: Color(0xFFDABFAE),
               title: Text('Train Your Focus Model'),
               content: Text('This task is used to train your focus model. Please upload a video of you in a focused state.'),
               actions: <Widget>[
                 TextButton(
-                  child: Text('No'),
+                  child: Text(
+                    'No',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 TextButton(
-                  child: Text('Yes'),
+                  child: Text(
+                    'Yes',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                     Navigator.push(
@@ -630,18 +675,15 @@ class _TodoListPageState extends State<TodoListPage> {
         );
       },
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: padding * 0.5),
+        margin: EdgeInsets.symmetric(vertical: padding * 0.3),
         padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
-          color: Color(0xFFE6E6FA),
+          color: Color(0xD07C94A5), // Muted blue for training card with transparency
           borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
@@ -653,7 +695,8 @@ class _TodoListPageState extends State<TodoListPage> {
                     'Train Your Focus Model',
                     style: TextStyle(
                       fontSize: fontSize,
-                      fontWeight: FontWeight.w500
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(height: 8),
@@ -661,16 +704,35 @@ class _TodoListPageState extends State<TodoListPage> {
                     '5s',
                     style: TextStyle(
                       fontSize: fontSize * 0.8,
-                      color: Colors.black87
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.psychology,
-              size: iconSize,
-              color: Colors.black.withOpacity(0.7),
+            GestureDetector(
+              onTap: () async {
+                final shouldRefresh = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CountdownPage(
+                      taskTitle: 'Train Your Focus Model',
+                      initialSeconds: 5,
+                      taskId: -1,
+                      isTrainingTask: true,
+                    ),
+                  ),
+                );
+                if (shouldRefresh == true) {
+                  _fetchTasks();
+                }
+              },
+              child: Icon(
+                Icons.play_circle_fill,
+                size: iconSize,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -681,9 +743,9 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget _buildTaskCard(Task task) {
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
-    final fontSize = isTablet ? 20.0 : 18.0;
-    final iconSize = isTablet ? 40.0 : 32.0;
-    final padding = screenSize.width * 0.03;
+    final fontSize = isTablet ? 16.0 : 14.0;
+    final iconSize = isTablet ? 32.0 : 28.0;
+    final padding = screenSize.width * 0.02;
 
     String countDownDisplayTime = '';
     if (task.mode == 'count down') {
@@ -701,20 +763,18 @@ class _TodoListPageState extends State<TodoListPage> {
         _showModifyTaskDialog(task);
       },
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: padding * 0.5),
         padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: _getTaskColor(task),
           borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 1.5,
+          ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Column(
@@ -724,34 +784,44 @@ class _TodoListPageState extends State<TodoListPage> {
                     task.title,
                     style: TextStyle(
                       fontSize: fontSize,
-                      fontWeight: FontWeight.w500
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (task.mode == 'count down' && countDownDisplayTime.isNotEmpty)
                     Padding(
-                      padding: EdgeInsets.only(top: 8),
+                      padding: EdgeInsets.only(top: 4),
                       child: Text(
                         countDownDisplayTime,
                         style: TextStyle(
                           fontSize: fontSize * 0.8,
-                          color: Colors.black87
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                 ],
               ),
             ),
-            if (task.mode == 'count down')
-              GestureDetector(
+            Align(
+              alignment: Alignment.bottomRight,
+              child: GestureDetector(
                 onTap: () async {
                   final shouldRefresh = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CountdownPage(
-                        taskTitle: task.title,
-                        initialSeconds: (task.countdownTime ?? 0) * 60,
-                        taskId: task.taskId,
-                      ),
+                      builder: (context) => task.mode == 'count down'
+                          ? CountdownPage(
+                              taskTitle: task.title,
+                              initialSeconds: (task.countdownTime ?? 0) * 60,
+                              taskId: task.taskId,
+                            )
+                          : CountupPage(
+                              taskTitle: task.title,
+                              taskId: task.taskId,
+                            ),
                     ),
                   );
                   if (shouldRefresh == true) {
@@ -759,33 +829,12 @@ class _TodoListPageState extends State<TodoListPage> {
                   }
                 },
                 child: Icon(
-                  Icons.play_circle_fill,
+                  task.mode == 'count down' ? Icons.play_circle_fill : Icons.timer_outlined,
                   size: iconSize,
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.white,
                 ),
               ),
-            if (task.mode == 'count up')
-              GestureDetector(
-                onTap: () async {
-                  final shouldRefresh = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CountupPage(
-                        taskTitle: task.title,
-                        taskId: task.taskId,
-                      ),
-                    ),
-                  );
-                  if (shouldRefresh == true) {
-                    _fetchTasks();
-                  }
-                },
-                child: Icon(
-                  Icons.timer_outlined,
-                  size: iconSize,
-                  color: Colors.black.withOpacity(0.7),
-                ),
-              ),
+            ),
           ],
         ),
       ),
