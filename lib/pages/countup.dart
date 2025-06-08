@@ -219,69 +219,69 @@ class _CountupPageState extends State<CountupPage> {
           if (data['task_id'] == widget.taskId && 
               data['is_finished'] == true) {
             
-            // 如果用户选择计入专注时长，则上传视频（如果有的话）
+            // if the user chooses to count the focus time, upload the video (if there is one)
             if (!givenUp) {
               try {
                 final prefs = await SharedPreferences.getInstance();
                 final userId = prefs.getInt('user_id');
                 if (userId == null) {
-                  print('未找到用户ID');
+                  print('User ID not found');
                   return;
                 }
-                print('准备上传数据，用户ID: $userId, 任务ID: ${widget.taskId}');
+                print('Preparing to upload data, user ID: $userId, task ID: ${widget.taskId}');
 
-                // 如果有视频文件，则上传视频
+                // if there is a video file, upload the video
                 if (_videoPath != null) {
                   final file = File(_videoPath!);
                   if (await file.exists()) {
-                    print('视频文件存在，大小: ${await file.length()} 字节');
+                    print('Video file exists, size: ${await file.length()} bytes');
 
-                    // 构建上传URL，将user_id和task_id作为URL参数
+                    // build the upload URL, with user_id and task_id as URL parameters
                     final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
-                    print('开始上传任务视频到: $uploadUrl');
+                    print('Start uploading task video to: $uploadUrl');
 
-                    // 创建multipart请求
+                    // create a multipart request
                     final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
                     
-                    // 添加视频文件
+                    // add the video file
                     final videoFile = await http.MultipartFile.fromPath(
-                      'video',  // 确保这里的字段名与后端期望的一致
+                      'video',  // make sure the field name here is consistent with the backend expectation
                       file.path,
                       contentType: MediaType('video', 'mp4'),
                     );
                     request.files.add(videoFile);
 
-                    print('发送上传请求...\nRequest URL: ${request.url}\nRequest method: ${request.method}');
+                    print('Sending upload request...\nRequest URL: ${request.url}\nRequest method: ${request.method}');
                     final streamedResponse = await request.send();
-                    print('收到响应，状态码: ${streamedResponse.statusCode}');
+                    print('Received response, status code: ${streamedResponse.statusCode}');
                     
                     final response = await http.Response.fromStream(streamedResponse);
-                    print('完整响应体: ${response.body}');
+                    print('Complete response body: ${response.body}');
                     
                     if (response.statusCode == 200) {
-                      print('视频上传成功！');
+                      print('Video uploaded successfully!');
                       try {
                         final responseData = jsonDecode(response.body);
-                        print('视频上传后端返回数据:');
-                        print('状态: ${responseData['status'] ?? '未知'}');
-                        print('专注比例: ${responseData['focus_ratio'] ?? '未知'}');
-                        print('视频URL: ${responseData['video_url'] ?? '未知'}');
+                        print('Video uploaded backend return data:');
+                        print('Status: ${responseData['status'] ?? 'Unknown'}');
+                        print('Focus ratio: ${responseData['focus_ratio'] ?? 'Unknown'}');
+                        print('Video URL: ${responseData['video_url'] ?? 'Unknown'}');
                       } catch (e) {
-                        print('解析响应数据时出错: $e');
+                        print('Error parsing response data: $e');
                       }
                     } else {
-                      print('视频上传失败，状态码: ${response.statusCode}');
-                      print('错误详情: ${response.body}');
+                      print('Video upload failed, status code: ${response.statusCode}');
+                      print('Error details: ${response.body}');
                     }
                   } else {
-                    print('视频文件不存在: $_videoPath');
+                    print('Video file does not exist: $_videoPath');
                   }
                 } else {
-                  print('没有视频文件，仅上传任务完成数据');
+                  print('No video file, only upload task completion data');
                 }
               } catch (e) {
-                print('上传数据时出错: $e');
-                print('错误堆栈: ${StackTrace.current}');
+                print('Error uploading data: $e');
+                print('Error stack: ${StackTrace.current}');
               }
             }
 
