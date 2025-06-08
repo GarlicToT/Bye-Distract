@@ -26,11 +26,30 @@ class _CountupPageState extends State<CountupPage> {
   CameraController? _cameraController;
   bool _isRecording = false;
   String? _videoPath;
+  String _backgroundImage = ''; // Added to store random background image
+
+  // List of available images in assets/images
+  final List<String> _imageAssets = [
+    'assets/images/geren.jpg',
+    'assets/images/profile.jpg',
+    'assets/images/studyroomlead.png',
+    'assets/images/leaderboard.jpg',
+    'assets/images/studyroom.jpg',
+    'assets/images/purple.jpg',
+    'assets/images/screen.jpg',
+  ];
 
   @override
   void initState() {
     super.initState();
+    _selectRandomBackground(); // Select a random background
     // 初始化时不自动开始计时和初始化摄像头
+  }
+
+  void _selectRandomBackground() {
+    setState(() {
+      _backgroundImage = _imageAssets[DateTime.now().millisecond % _imageAssets.length];
+    });
   }
 
   Future<void> _initializeCamera() async {
@@ -213,7 +232,7 @@ class _CountupPageState extends State<CountupPage> {
                 );
                 request.files.add(videoFile);
 
-                print('发送上传请求...');
+                print('发送上传请求...\nRequest URL: ${request.url}\nRequest method: ${request.method}');
                 final streamedResponse = await request.send();
                 print('收到响应，状态码: ${streamedResponse.statusCode}');
                 
@@ -272,56 +291,64 @@ class _CountupPageState extends State<CountupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.taskTitle),
+        title: Text(widget.taskTitle, style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFF9CCCCE),
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 32),
-          Text(
-            widget.taskTitle.toUpperCase(),
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Montserrat'),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(_backgroundImage),
+            fit: BoxFit.cover,
           ),
-          SizedBox(height: 24),
-          Text(
-            _formatTime(_elapsedSeconds),
-            style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.lightBlue[100], letterSpacing: 4),
-          ),
-          SizedBox(height: 8),
-          Text('Focusing', style: TextStyle(fontSize: 16)),
-          SizedBox(height: 32),
-          GestureDetector(
-            onTap: _showCameraDialog,
-            child: Container(
-              width: 300,
-              height: 300,
-              color: Colors.black12,
-              child: _cameraController != null && _cameraController!.value.isInitialized
-                  ? CameraPreview(_cameraController!)
-                  : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.grey[400])),
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: 32),
+            Text(
+              widget.taskTitle.toUpperCase(),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Montserrat', color: Colors.white),
             ),
-          ),
-          Spacer(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: _isRecording ? _stopRecording : _finishTask,
-                  child: CircleAvatar(
-                    radius: 32,
-                    backgroundColor: Colors.black,
-                    child: Icon(_isRecording ? Icons.stop : Icons.stop, color: Colors.white, size: 32),
+            SizedBox(height: 24),
+            Text(
+              _formatTime(_elapsedSeconds),
+              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 4),
+            ),
+            SizedBox(height: 8),
+            Text('Focusing', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+            SizedBox(height: 32),
+            GestureDetector(
+              onTap: _showCameraDialog,
+              child: Container(
+                width: 300,
+                height: 300,
+                color: Colors.white.withOpacity(0.7),
+                child: _cameraController != null && _cameraController!.value.isInitialized
+                    ? CameraPreview(_cameraController!)
+                    : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.white)),
+              ),
+            ),
+            Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: _isRecording ? _stopRecording : _finishTask,
+                    child: CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.white,
+                      child: Icon(_isRecording ? Icons.stop : Icons.stop, color: Colors.black, size: 32),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

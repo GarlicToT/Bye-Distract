@@ -143,100 +143,132 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          width: 320,
-          padding: EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 12,
-                offset: Offset(4, 4),
-              ),
-            ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/geren.jpg'),
+            fit: BoxFit.cover,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 8),
-              // Title
-              Center(
-                child: Text(
-                  'Register',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFAED3EA),
+        ),
+        child: Center(
+          child: Container(
+            width: 320,
+            padding: EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Color(0xFFDCC4A5),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 12,
+                  offset: Offset(4, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 8),
+                Container(
+                  margin: EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 32,
+                        color: Color(0xFFA099A2),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Bye-Distract',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFA099A2),
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              SizedBox(height: 24),
-              // Username input box
-              TextField(
-                controller: usernameController,
-                decoration: InputDecoration(
-                  hintText: 'Username',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
+                Center(
+                  child: Text(
+                    'Register',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFA099A2),
+                    ),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
-              ),
-              SizedBox(height: 16),
-              // Email input box
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  hintText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
+                SizedBox(height: 24),
+                TextField(
+                  controller: usernameController,
+                  decoration: InputDecoration(
+                    hintText: 'Username',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    filled: true,
+                    fillColor: Color(0xFFDCC4A5),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
-              ),
-              SizedBox(height: 16),
-              // Password input box
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
+                SizedBox(height: 16),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    hintText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    filled: true,
+                    fillColor: Color(0xFFDCC4A5),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
-              ),
-              SizedBox(height: 32),
-              // Bottom row: left return, right check
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, size: 32),
-                    onPressed: _isLoading ? null : () {
-                      Navigator.pop(context);
-                    },
+                SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    filled: true,
+                    fillColor: Color(0xFFDCC4A5),
                   ),
-                  IconButton(
-                    icon: _isLoading 
-                      ? SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                          ),
-                        )
-                      : Icon(Icons.check, size: 36),
-                    onPressed: _isLoading ? null : _register,
-                  ),
-                ],
-              ),
-            ],
+                ),
+                SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back, size: 32, color: Color(0xFFA099A2)),
+                      onPressed: _isLoading ? null : () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    IconButton(
+                      icon: _isLoading
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA099A2)),
+                            ),
+                          )
+                        : Icon(Icons.check, size: 36, color: Color(0xFFA099A2)),
+                      onPressed: _isLoading ? null : _register,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

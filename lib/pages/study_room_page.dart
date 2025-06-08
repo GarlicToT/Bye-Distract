@@ -270,7 +270,7 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
   final TextStyle _appBarTitleStyle = TextStyle(
     color: Colors.white,
     fontSize: 20,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.bold,
   );
 
   Widget _buildCreateRoomDialog(BuildContext context) {
