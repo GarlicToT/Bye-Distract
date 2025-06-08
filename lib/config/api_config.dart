@@ -3,7 +3,7 @@ class ApiConfig {
   // static const String baseUrl = 'http://10.253.52.107:8001';
   // static const String baseUrl = 'http://cm-aq01.cdn.chunithm.cn:20100';
   // static const String baseUrl = 'http://10.252.88.252:8001';
-  static const String baseUrl = 'http://us-g2.cdn.chunithm.cn:20071';
+  static const String baseUrl = 'http://47.115.40.224:8001';
   // http://hwc.cdn.chunithm.cn:20071
   
   // User-related
