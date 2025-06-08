@@ -8,11 +8,11 @@ import '../config/api_config.dart';
 const TextStyle _titleStyle = TextStyle(
   fontSize: 20,
   fontWeight: FontWeight.bold,
-  color: Colors.black87,
+  color: Colors.white,
 );
 const TextStyle _subtitleStyle = TextStyle(
   fontSize: 14,
-  color: Colors.black54,
+  color: Colors.white70,
 );
 
 class StatisticsPage extends StatefulWidget {
@@ -99,19 +99,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Color(0xFFA1B8D7),
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.settings, color: Colors.black),
+            icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(Icons.emoji_events_outlined, color: Colors.black),
+            icon: Icon(Icons.emoji_events_outlined, color: Colors.white),
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(Icons.edit_outlined, color: Colors.black),
+            icon: Icon(Icons.edit_outlined, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -119,7 +119,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
+            image: AssetImage('assets/images/purple.jpg'),
             fit: BoxFit.cover,
             opacity: 1.0,
           ),
@@ -184,9 +184,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
     List<PieChartSectionData> sections = [];
     final colors = [
-      Color(0xFF166DA6),
-      Color(0xFF58C0DB),
-      Color(0xFFB5D5DA),
+      Color(0xFF8F89BB),
+      Color(0xFFBEA0B6),
+      Color(0xFFC08E82),
+      Color(0xFF8B733D),
     ];
 
     int colorIndex = 0;
@@ -202,7 +203,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             titleStyle: TextStyle(
               fontSize: subtitleFontSize,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
               height: 1.2
             ),
           ),
@@ -217,7 +218,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.white.withOpacity(0.0), Color(0xA06CC6DF)],
+          colors: [Color(0x30A1B8D7), Color(0xFF887A7E)],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE0E0E0), width: 1),
@@ -240,7 +241,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
               ),
               Row(
@@ -249,17 +250,17 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     today['date']?.toString() ?? '',
                     style: TextStyle(
                       fontSize: subtitleFontSize,
-                      color: Colors.black54,
+                      color: Colors.white70,
                     ),
                   ),
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.chevron_left, color: Colors.black54),
+                        icon: Icon(Icons.chevron_left, color: Colors.white),
                         onPressed: () {},
                       ),
                       IconButton(
-                        icon: Icon(Icons.chevron_right, color: Colors.black54),
+                        icon: Icon(Icons.chevron_right, color: Colors.white),
                         onPressed: () {},
                       ),
                     ],
@@ -277,7 +278,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             child: sections.isEmpty
                 ? Center(child: Text('No tasks today', style: TextStyle(
                     fontSize: subtitleFontSize,
-                    color: Colors.black54)))
+                    color: Colors.white70)))
                 : PieChart(
                     PieChartData(
                       sections: sections,
@@ -304,7 +305,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.white.withOpacity(0.0), Color(0xA06CC6DF)],
+          colors: [Color(0x30A1B8D7), Color(0xFF887A7E)],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE0E0E0), width: 1),
@@ -322,7 +323,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           Text(title, style: TextStyle(
             fontSize: fontSize,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Colors.white,
           )),
           SizedBox(height: 16),
           Row(
@@ -342,7 +343,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     return Column(
       children: [
         Text(label, 
-          style: TextStyle(fontSize: fontSize, color: Colors.black54),
+          style: TextStyle(fontSize: fontSize, color: Colors.white70),
         ),
         SizedBox(height: 4),
         Text(value,
@@ -350,7 +351,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           style: TextStyle(
             fontSize: fontSize * 1.2,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Colors.white,
           )),
       ],
     );
@@ -374,7 +375,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         barRods: [
           BarChartRodData(
             toY: focusRatio,
-            color: Color(0xFF58C0DB),
+            color: Color(0xFF8F89BB),
             width: 20,
             borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
           ),
@@ -388,7 +389,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.white.withOpacity(0.0), Color(0xA06CC6DF)],
+          colors: [Color(0x30A1B8D7), Color(0xFF887A7E)],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE0E0E0), width: 1),
@@ -411,7 +412,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -428,7 +429,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       'No task data',
                       style: TextStyle(
                         fontSize: subtitleFontSize,
-                        color: Colors.black54,
+                        color: Colors.white70,
                       ),
                     ),
                   )
@@ -462,7 +463,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                   child: Text(
                                     task['title'],
                                     style: TextStyle(
-                                      color: Colors.black54,
+                                      color: Colors.white70,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -480,7 +481,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                               return Text(
                                 '${(value * 100).toInt()}%',
                                 style: TextStyle(
-                                  color: Colors.black54,
+                                  color: Colors.white70,
                                   fontSize: 12,
                                 ),
                               );
