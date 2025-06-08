@@ -808,25 +808,8 @@ class _TodoListPageState extends State<TodoListPage> {
             Align(
               alignment: Alignment.bottomRight,
               child: GestureDetector(
-                onTap: () async {
-                  final shouldRefresh = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => task.mode == 'count down'
-                          ? CountdownPage(
-                              taskTitle: task.title,
-                              initialSeconds: (task.countdownTime ?? 0) * 60,
-                              taskId: task.taskId,
-                            )
-                          : CountupPage(
-                              taskTitle: task.title,
-                              taskId: task.taskId,
-                            ),
-                    ),
-                  );
-                  if (shouldRefresh == true) {
-                    _fetchTasks();
-                  }
+                onTap: () {
+                  _showCameraDialogAndStartTask(task);
                 },
                 child: Icon(
                   task.mode == 'count down' ? Icons.play_circle_fill : Icons.timer_outlined,
@@ -838,6 +821,80 @@ class _TodoListPageState extends State<TodoListPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showCameraDialogAndStartTask(Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF788682),
+          title: Text('Open Camera', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Text(
+            'Do you want to open the camera to record?',
+            style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('NO', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final shouldRefresh = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => task.mode == 'count down'
+                        ? CountdownPage(
+                            taskTitle: task.title,
+                            initialSeconds: (task.countdownTime ?? 0) * 60,
+                            taskId: task.taskId,
+                            shouldStartTimer: true,
+                            shouldStartCamera: false,
+                          )
+                        : CountupPage(
+                            taskTitle: task.title,
+                            taskId: task.taskId,
+                            shouldStartTimer: true,
+                            shouldStartCamera: false,
+                          ),
+                  ),
+                );
+                if (shouldRefresh == true) {
+                  _fetchTasks();
+                }
+              },
+            ),
+            TextButton(
+              child: Text('Yes', style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final shouldRefresh = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => task.mode == 'count down'
+                        ? CountdownPage(
+                            taskTitle: task.title,
+                            initialSeconds: (task.countdownTime ?? 0) * 60,
+                            taskId: task.taskId,
+                            shouldStartTimer: true,
+                            shouldStartCamera: true,
+                          )
+                        : CountupPage(
+                            taskTitle: task.title,
+                            taskId: task.taskId,
+                            shouldStartTimer: true,
+                            shouldStartCamera: true,
+                          ),
+                  ),
+                );
+                if (shouldRefresh == true) {
+                  _fetchTasks();
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

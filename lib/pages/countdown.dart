@@ -15,6 +15,8 @@ class CountdownPage extends StatefulWidget {
   final int initialSeconds;
   final int taskId;
   final bool isTrainingTask;
+  final bool shouldStartTimer;
+  final bool shouldStartCamera;
 
   const CountdownPage({
     Key? key, 
@@ -22,6 +24,8 @@ class CountdownPage extends StatefulWidget {
     required this.initialSeconds, 
     required this.taskId,
     this.isTrainingTask = false,
+    this.shouldStartTimer = false,
+    this.shouldStartCamera = false,
   }) : super(key: key);
 
   @override
@@ -53,10 +57,15 @@ class _CountdownPageState extends State<CountdownPage> {
   void initState() {
     super.initState();
     _remainingSeconds = widget.initialSeconds;
-    _selectRandomBackground(); // Select a random background
-    // Only the training task automatically starts timing and initializing the camera
-    if (widget.isTrainingTask) {
+    _selectRandomBackground();
+    
+    // 如果是训练任务，或者shouldStartTimer为true，就开始计时
+    if (widget.isTrainingTask || widget.shouldStartTimer) {
       _startTimer();
+    }
+    
+    // 如果是训练任务，或者shouldStartCamera为true，就初始化摄像头
+    if (widget.isTrainingTask || widget.shouldStartCamera) {
       _initializeCamera();
     }
   }
@@ -85,8 +94,7 @@ class _CountdownPageState extends State<CountdownPage> {
     await _cameraController!.initialize();
     if (mounted) {
       setState(() {});
-      // Only the training task automatically starts recording
-      if (widget.isTrainingTask) {
+      if (widget.shouldStartCamera) {
         _startRecording();
       }
     }
@@ -295,7 +303,7 @@ class _CountdownPageState extends State<CountdownPage> {
     if (_isRecording && _cameraController != null) {
       try {
         print('Stopping recording...');
-        // 停止录制
+        // stop recording
         final XFile video = await _cameraController!.stopVideoRecording();
         print('Recording stopped, video saved to: ${video.path}');
         
@@ -313,6 +321,38 @@ class _CountdownPageState extends State<CountdownPage> {
         print('Preparing to upload video...');
         // upload video
         await _uploadTrainingVideo();
+
+        // show the training completed dialog
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                backgroundColor: Color(0xFF788682),
+                title: Text(
+                  'Training Completed',
+                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                content: Text(
+                  'You have completed the focus model training!',
+                  style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text(
+                      'Return',
+                      style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // close the dialog
+                      Navigator.of(context).pop(true); // return TodoList and refresh
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
       } catch (e) {
         print('Error handling training task: $e');
         if (mounted) {
@@ -324,6 +364,38 @@ class _CountdownPageState extends State<CountdownPage> {
     } else {
       print('Camera status: ${_cameraController != null ? "Initialized" : "Not initialized"}');
       print('Recording status: ${_isRecording ? "Recording" : "Not recording"}');
+      
+      // even if there is no video recording, show the training completed dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Color(0xFF788682),
+              title: Text(
+                'Training Completed',
+                style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              content: Text(
+                'You have completed the focus model training!',
+                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text(
+                    'Return',
+                    style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // close the dialog
+                    Navigator.of(context).pop(true); // return TodoList and refresh
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
     }
   }
 
@@ -418,82 +490,87 @@ class _CountdownPageState extends State<CountdownPage> {
           print('isTrainingTask: ${widget.isTrainingTask}');
           print('_videoPath: $_videoPath');
           
-          // If the user chooses to count in statistics, and it is not a training task, upload the video
-          if (!givenUp && !widget.isTrainingTask && _videoPath != null) {
-            print('All conditions met, starting video upload');
+          // If the user chooses to count in statistics, and it is not a training task
+          if (!givenUp && !widget.isTrainingTask) {
+            print('All conditions met, starting data upload');
             try {
               final userId = prefs.getInt('user_id');
               if (userId == null) {
                 print('User ID not found');
                 return;
               }
-              print('Preparing to upload video, user ID: $userId, task ID: ${widget.taskId}');
+              print('Preparing to upload data, user ID: $userId, task ID: ${widget.taskId}');
 
-              final file = File(_videoPath!);
-              if (!await file.exists()) {
-                print('Video file does not exist: $_videoPath');
-                return;
-              }
-              print('Video file exists, size: ${await file.length()} bytes');
+              // If there is a video file, upload it
+              if (_videoPath != null) {
+                final file = File(_videoPath!);
+                if (await file.exists()) {
+                  print('Video file exists, size: ${await file.length()} bytes');
 
-              // Build upload URL, with user_id and task_id as URL parameters
-              final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
-              print('Starting to upload task video to: $uploadUrl');
+                  // Build upload URL, with user_id and task_id as URL parameters
+                  final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
+                  print('Starting to upload task video to: $uploadUrl');
 
-              // Create multipart request
-              final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
-              
-              // Add video file
-              final videoFile = await http.MultipartFile.fromPath(
-                'video',  // Ensure the field name here is consistent with the backend expectation
-                file.path,
-                contentType: MediaType('video', 'mp4'),
-              );
-              request.files.add(videoFile);
-
-              print('Sending upload request...');
-              print('Request URL: ${request.url}');
-              print('Request method: ${request.method}');
-              print('Request parameters: user_id=$userId, task_id=${widget.taskId}');
-              print('Video file: ${file.path}');
-              print('Content-Type: ${videoFile.contentType}');
-
-              final streamedResponse = await request.send();
-              print('Received response, status code: ${streamedResponse.statusCode}');
-              print('Response headers: ${streamedResponse.headers}');
-              
-              final response = await http.Response.fromStream(streamedResponse);
-              print('Complete response body: ${response.body}');
-              
-              if (response.statusCode == 200) {
-                print('Video upload successful!');
-                try {
-                  final responseData = jsonDecode(response.body);
-                  print('Video upload backend return data:');
-                  print('Status: ${responseData['status'] ?? 'Unknown'}');
-                  print('Focus ratio: ${responseData['focus_ratio'] ?? 'Unknown'}');
-                  print('Video URL: ${responseData['video_url'] ?? 'Unknown'}');
+                  // Create multipart request
+                  final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
                   
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Video upload successful! Focus ratio: ${responseData['focus_ratio']}')),
-                    );
+                  // Add video file
+                  final videoFile = await http.MultipartFile.fromPath(
+                    'video',  // Ensure the field name here is consistent with the backend expectation
+                    file.path,
+                    contentType: MediaType('video', 'mp4'),
+                  );
+                  request.files.add(videoFile);
+
+                  print('Sending upload request...');
+                  print('Request URL: ${request.url}');
+                  print('Request method: ${request.method}');
+                  print('Request parameters: user_id=$userId, task_id=${widget.taskId}');
+                  print('Video file: ${file.path}');
+                  print('Content-Type: ${videoFile.contentType}');
+
+                  final streamedResponse = await request.send();
+                  print('Received response, status code: ${streamedResponse.statusCode}');
+                  print('Response headers: ${streamedResponse.headers}');
+                  
+                  final response = await http.Response.fromStream(streamedResponse);
+                  print('Complete response body: ${response.body}');
+                  
+                  if (response.statusCode == 200) {
+                    print('Video upload successful!');
+                    try {
+                      final responseData = jsonDecode(response.body);
+                      print('Video upload backend return data:');
+                      print('Status: ${responseData['status'] ?? 'Unknown'}');
+                      print('Focus ratio: ${responseData['focus_ratio'] ?? 'Unknown'}');
+                      print('Video URL: ${responseData['video_url'] ?? 'Unknown'}');
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Video upload successful! Focus ratio: ${responseData['focus_ratio']}')),
+                        );
+                      }
+                    } catch (e) {
+                      print('Error parsing response data: $e');
+                      print('Original response content: ${response.body}');
+                    }
+                  } else {
+                    print('Video upload failed, status code: ${response.statusCode}');
+                    print('Error details: ${response.body}');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Upload failed, please try again: ${response.body}')),
+                      );
+                    }
                   }
-                } catch (e) {
-                  print('Error parsing response data: $e');
-                  print('Original response content: ${response.body}');
+                } else {
+                  print('Video file does not exist: $_videoPath');
                 }
               } else {
-                print('Video upload failed, status code: ${response.statusCode}');
-                print('Error details: ${response.body}');
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Upload failed, please try again: ${response.body}')),
-                  );
-                }
+                print('No video file, only uploading task completion data');
               }
             } catch (e) {
-              print('Error uploading video: $e');
+              print('Error uploading data: $e');
               print('Error stack trace: ${StackTrace.current}');
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -505,7 +582,6 @@ class _CountdownPageState extends State<CountdownPage> {
             print('Conditions not met:');
             if (givenUp) print('- User chose not to count in statistics');
             if (widget.isTrainingTask) print('- This is a training task');
-            if (_videoPath == null) print('- No video file');
           }
           
           if (mounted) {

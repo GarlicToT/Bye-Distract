@@ -12,8 +12,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CountupPage extends StatefulWidget {
   final String taskTitle;
   final int taskId;
+  final bool shouldStartTimer;
+  final bool shouldStartCamera;
 
-  const CountupPage({Key? key, required this.taskTitle, required this.taskId}) : super(key: key);
+  const CountupPage({
+    Key? key, 
+    required this.taskTitle, 
+    required this.taskId,
+    this.shouldStartTimer = false,
+    this.shouldStartCamera = false,
+  }) : super(key: key);
 
   @override
   State<CountupPage> createState() => _CountupPageState();
@@ -42,8 +50,15 @@ class _CountupPageState extends State<CountupPage> {
   @override
   void initState() {
     super.initState();
-    _selectRandomBackground(); // Select a random background
-    // 初始化时不自动开始计时和初始化摄像头
+    _selectRandomBackground();
+    
+    if (widget.shouldStartTimer) {
+      _startTimer();
+    }
+    
+    if (widget.shouldStartCamera) {
+      _initializeCamera();
+    }
   }
 
   void _selectRandomBackground() {
@@ -68,7 +83,12 @@ class _CountupPageState extends State<CountupPage> {
     );
     
     await _cameraController!.initialize();
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      if (widget.shouldStartCamera) {
+        _startRecording();
+      }
+    }
   }
 
   Future<void> _startRecording() async {
@@ -199,8 +219,8 @@ class _CountupPageState extends State<CountupPage> {
           if (data['task_id'] == widget.taskId && 
               data['is_finished'] == true) {
             
-            // 如果用户选择计入专注时长，则上传视频
-            if (!givenUp && _videoPath != null) {
+            // 如果用户选择计入专注时长，则上传视频（如果有的话）
+            if (!givenUp) {
               try {
                 final prefs = await SharedPreferences.getInstance();
                 final userId = prefs.getInt('user_id');
@@ -208,54 +228,59 @@ class _CountupPageState extends State<CountupPage> {
                   print('未找到用户ID');
                   return;
                 }
-                print('准备上传视频，用户ID: $userId, 任务ID: ${widget.taskId}');
+                print('准备上传数据，用户ID: $userId, 任务ID: ${widget.taskId}');
 
-                final file = File(_videoPath!);
-                if (!await file.exists()) {
-                  print('视频文件不存在: $_videoPath');
-                  return;
-                }
-                print('视频文件存在，大小: ${await file.length()} 字节');
+                // 如果有视频文件，则上传视频
+                if (_videoPath != null) {
+                  final file = File(_videoPath!);
+                  if (await file.exists()) {
+                    print('视频文件存在，大小: ${await file.length()} 字节');
 
-                // 构建上传URL，将user_id和task_id作为URL参数
-                final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
-                print('开始上传任务视频到: $uploadUrl');
+                    // 构建上传URL，将user_id和task_id作为URL参数
+                    final uploadUrl = '${ApiConfig.uploadansVideoUrl}?user_id=$userId&task_id=${widget.taskId}';
+                    print('开始上传任务视频到: $uploadUrl');
 
-                // 创建multipart请求
-                final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
-                
-                // 添加视频文件
-                final videoFile = await http.MultipartFile.fromPath(
-                  'video',  // 确保这里的字段名与后端期望的一致
-                  file.path,
-                  contentType: MediaType('video', 'mp4'),
-                );
-                request.files.add(videoFile);
+                    // 创建multipart请求
+                    final request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
+                    
+                    // 添加视频文件
+                    final videoFile = await http.MultipartFile.fromPath(
+                      'video',  // 确保这里的字段名与后端期望的一致
+                      file.path,
+                      contentType: MediaType('video', 'mp4'),
+                    );
+                    request.files.add(videoFile);
 
-                print('发送上传请求...\nRequest URL: ${request.url}\nRequest method: ${request.method}');
-                final streamedResponse = await request.send();
-                print('收到响应，状态码: ${streamedResponse.statusCode}');
-                
-                final response = await http.Response.fromStream(streamedResponse);
-                print('完整响应体: ${response.body}');
-                
-                if (response.statusCode == 200) {
-                  print('视频上传成功！');
-                  try {
-                    final responseData = jsonDecode(response.body);
-                    print('视频上传后端返回数据:');
-                    print('状态: ${responseData['status'] ?? '未知'}');
-                    print('专注比例: ${responseData['focus_ratio'] ?? '未知'}');
-                    print('视频URL: ${responseData['video_url'] ?? '未知'}');
-                  } catch (e) {
-                    print('解析响应数据时出错: $e');
+                    print('发送上传请求...\nRequest URL: ${request.url}\nRequest method: ${request.method}');
+                    final streamedResponse = await request.send();
+                    print('收到响应，状态码: ${streamedResponse.statusCode}');
+                    
+                    final response = await http.Response.fromStream(streamedResponse);
+                    print('完整响应体: ${response.body}');
+                    
+                    if (response.statusCode == 200) {
+                      print('视频上传成功！');
+                      try {
+                        final responseData = jsonDecode(response.body);
+                        print('视频上传后端返回数据:');
+                        print('状态: ${responseData['status'] ?? '未知'}');
+                        print('专注比例: ${responseData['focus_ratio'] ?? '未知'}');
+                        print('视频URL: ${responseData['video_url'] ?? '未知'}');
+                      } catch (e) {
+                        print('解析响应数据时出错: $e');
+                      }
+                    } else {
+                      print('视频上传失败，状态码: ${response.statusCode}');
+                      print('错误详情: ${response.body}');
+                    }
+                  } else {
+                    print('视频文件不存在: $_videoPath');
                   }
                 } else {
-                  print('视频上传失败，状态码: ${response.statusCode}');
-                  print('错误详情: ${response.body}');
+                  print('没有视频文件，仅上传任务完成数据');
                 }
               } catch (e) {
-                print('上传视频时出错: $e');
+                print('上传数据时出错: $e');
                 print('错误堆栈: ${StackTrace.current}');
               }
             }
