@@ -100,12 +100,12 @@ class _CountupPageState extends State<CountupPage> {
         setState(() {
           _isRecording = true;
         });
-        print('开始录制视频');
+        print('Start recording video');
       } catch (e) {
-        print('开始录制时出错: $e');
+        print('Error starting recording: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('开始录制时出错：$e')),
+            SnackBar(content: Text('Error starting recording: $e')),
           );
         }
       }
