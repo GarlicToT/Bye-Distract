@@ -9,6 +9,7 @@ This project is GarlicToT/Bye-Distract. It is described as A Pomodoro System for
 ## Backend Repository
 This project serves as the frontend for the Pomodoro System. The backend repository for this project can be found here: https://github.com/April202305/Bye--Distract-backend 
 ## Project Structure
+'''
 Bye-Distract/
 ├── .vscode/                     # VS Code settings
 ├── android/                     # Android platform code
@@ -41,7 +42,7 @@ Bye-Distract/
 ├── pubspec.yaml                 # Project dependencies
 ├── pubspec.lock                 # Locked dependency versions
 └── README.md                    # Project documentation
-
+'''
 
 ## Getting Started
 
