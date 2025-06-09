@@ -78,8 +78,9 @@ class _CountupPageState extends State<CountupPage> {
     
     _cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.medium,
+      ResolutionPreset.low,
       enableAudio: true,
+      imageFormatGroup: ImageFormatGroup.jpeg,
     );
     
     await _cameraController!.initialize();

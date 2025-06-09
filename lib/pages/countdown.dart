@@ -87,14 +87,15 @@ class _CountdownPageState extends State<CountdownPage> {
     
     _cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.medium,
+      ResolutionPreset.low,
       enableAudio: true,
+      imageFormatGroup: ImageFormatGroup.jpeg,
     );
     
     await _cameraController!.initialize();
     if (mounted) {
       setState(() {});
-      if (widget.shouldStartCamera) {
+      if (widget.shouldStartCamera || widget.isTrainingTask) {
         _startRecording();
       }
     }
@@ -170,6 +171,8 @@ class _CountdownPageState extends State<CountdownPage> {
         return;
       }
 
+      print('File size: ${await file.length()} bytes');
+
       print('Create upload request');
       final uploadUrl = '${ApiConfig.uploadVideoUrl}?user_id=$userId';
       print('Upload URL: $uploadUrl');
@@ -179,16 +182,29 @@ class _CountdownPageState extends State<CountdownPage> {
         Uri.parse(uploadUrl)
       );
 
-      // Add video file
+      // Add video file with correct field name 'video'
       final videoFile = await http.MultipartFile.fromPath(
-        'video',
+        'video',  // 确保参数名为 'video'
         file.path,
         contentType: MediaType('video', 'mp4'),
       );
       request.files.add(videoFile);
 
       print('Send upload request');
-      final streamedResponse = await request.send();
+      print('Request URL: ${request.url}');
+      print('Request method: ${request.method}');
+      print('Request parameters: user_id=$userId');
+      print('Video file: ${file.path}');
+      print('Content-Type: ${videoFile.contentType}');
+      print('Field name: ${videoFile.field}');
+
+      final streamedResponse = await request.send().timeout(
+        Duration(seconds: 30),
+        onTimeout: () {
+          print('Upload timeout after 30 seconds');
+          throw TimeoutException('Upload timeout');
+        },
+      );
       final response = await http.Response.fromStream(streamedResponse);
       print('Upload response status code: ${response.statusCode}');
       print('Upload response body: ${response.body}');
@@ -200,14 +216,24 @@ class _CountdownPageState extends State<CountdownPage> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('Training completed'),
-                content: Text('You have completed the focus model training!'),
+                backgroundColor: Color(0xFF788682),
+                title: Text(
+                  'Training Completed',
+                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                content: Text(
+                  'You have completed the focus model training!',
+                  style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('OK'),
+                    child: Text(
+                      'Return',
+                      style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
                     onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(); // close the dialog
+                      Navigator.of(context).pop(true); // return TodoList and refresh
                     },
                   ),
                 ],
@@ -499,7 +525,13 @@ class _CountdownPageState extends State<CountdownPage> {
                   print('Video file: ${file.path}');
                   print('Content-Type: ${videoFile.contentType}');
 
-                  final streamedResponse = await request.send();
+                  final streamedResponse = await request.send().timeout(
+                    Duration(seconds: 30),
+                    onTimeout: () {
+                      print('Upload timeout after 30 seconds');
+                      throw TimeoutException('Upload timeout');
+                    },
+                  );
                   print('Received response, status code: ${streamedResponse.statusCode}');
                   print('Response headers: ${streamedResponse.headers}');
                   
