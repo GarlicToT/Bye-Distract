@@ -265,17 +265,30 @@ class _TodoListPageState extends State<TodoListPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete Task'),
-          content: Text('Are you sure you want to delete the task "${task.title}" ?'),
+          backgroundColor: Color(0xFF788682),
+          title: Text(
+            'Delete Task',
+            style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Are you sure you want to delete the task "${task.title}"?',
+            style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text('No'),
+              child: Text(
+                'No',
+                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Yes', style: TextStyle(color: Colors.red)),
+              child: Text(
+                'Yes',
+                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 _deleteTaskFromServer(task.taskId);
@@ -843,7 +856,7 @@ class _TodoListPageState extends State<TodoListPage> {
       final url = '${ApiConfig.baseUrl}/tasks/emotion/$userId';
       print('Request URL: $url');
       
-      // 检查用户是否已经训练过focus model
+      // Check if user has already trained focus model
       final response = await http.get(
         Uri.parse(url),
       );
@@ -858,7 +871,7 @@ class _TodoListPageState extends State<TodoListPage> {
         
         if (data == false) {
           print('User has not trained focus model yet');
-          // 如果用户还没有训练过，显示提示框
+          // If user has not trained focus model yet, show dialog
           if (mounted) {
             showDialog(
               context: context,
@@ -912,7 +925,7 @@ class _TodoListPageState extends State<TodoListPage> {
           return;
         } else {
           print('User has already trained focus model');
-          // 如果用户已经训练过，直接显示相机对话框
+          // If user has already trained focus model, show camera dialog
           _showCameraDialog(task);
         }
       } else {

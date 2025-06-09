@@ -297,9 +297,9 @@ class _CountdownPageState extends State<CountdownPage> {
 
         print('Closing camera...');
         try {
-          // 先停止预览
+          // Stop preview first
           await _cameraController!.pausePreview();
-          // 然后关闭相机
+          // Then close the camera
           await _cameraController!.dispose();
         } catch (e) {
           print('Error closing camera: $e');
@@ -308,7 +308,7 @@ class _CountdownPageState extends State<CountdownPage> {
         }
         print('Camera closed');
 
-        // 先显示完成对话框
+        // Show completion dialog
         if (mounted) {
           showDialog(
             context: context,
@@ -340,7 +340,7 @@ class _CountdownPageState extends State<CountdownPage> {
           );
         }
 
-        // 在后台上传视频
+        // Upload video in the background
         print('Preparing to upload video...');
         _uploadTrainingVideo();
       } catch (e) {
@@ -355,7 +355,7 @@ class _CountdownPageState extends State<CountdownPage> {
       print('Camera status: ${_cameraController != null ? "Initialized" : "Not initialized"}');
       print('Recording status: ${_isRecording ? "Recording" : "Not recording"}');
       
-      // 如果没有录制视频，也要确保相机被正确关闭
+      // If no video is recorded, ensure the camera is closed correctly
       if (_cameraController != null) {
         try {
           await _cameraController!.pausePreview();
@@ -367,7 +367,7 @@ class _CountdownPageState extends State<CountdownPage> {
         }
       }
       
-      // 显示完成对话框
+      // Show completion dialog
       if (mounted) {
         showDialog(
           context: context,
