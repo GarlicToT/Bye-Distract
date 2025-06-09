@@ -112,38 +112,6 @@ class _CountupPageState extends State<CountupPage> {
     }
   }
 
-  Future<void> _showCameraDialog() async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Open the camera'),
-          content: Text('Do you want to open the camera to record?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // When the user chooses not to turn on the camera, only the timing starts
-                _startTimer();
-              },
-            ),
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                // When the user chooses to turn on the camera, initialize the camera and start timing and recording
-                await _initializeCamera();
-                _startTimer();
-                await _startRecording();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _stopRecording() async {
     if (_isRecording && _cameraController != null) {
       final XFile video = await _cameraController!.stopVideoRecording();
@@ -344,16 +312,13 @@ class _CountupPageState extends State<CountupPage> {
             SizedBox(height: 8),
             Text('Focusing', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
             SizedBox(height: 32),
-            GestureDetector(
-              onTap: _showCameraDialog,
-              child: Container(
-                width: 300,
-                height: 300,
-                color: Colors.white.withOpacity(0.7),
-                child: _cameraController != null && _cameraController!.value.isInitialized
-                    ? CameraPreview(_cameraController!)
-                    : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.white)),
-              ),
+            Container(
+              width: 300,
+              height: 300,
+              color: Colors.white.withOpacity(0.7),
+              child: _cameraController != null && _cameraController!.value.isInitialized
+                  ? CameraPreview(_cameraController!)
+                  : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.white)),
             ),
             Spacer(),
             Padding(

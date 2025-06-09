@@ -59,12 +59,12 @@ class _CountdownPageState extends State<CountdownPage> {
     _remainingSeconds = widget.initialSeconds;
     _selectRandomBackground();
     
-    // 如果是训练任务，或者shouldStartTimer为true，就开始计时
+    // If it is a training task, or shouldStartTimer is true, start timing
     if (widget.isTrainingTask || widget.shouldStartTimer) {
       _startTimer();
     }
     
-    // 如果是训练任务，或者shouldStartCamera为true，就初始化摄像头
+    // If it is a training task, or shouldStartCamera is true, initialize the camera
     if (widget.isTrainingTask || widget.shouldStartCamera) {
       _initializeCamera();
     }
@@ -123,49 +123,6 @@ class _CountdownPageState extends State<CountdownPage> {
     } else {
       print('Camera not initialized, cannot start recording');
     }
-  }
-
-  Future<void> _showCameraDialog() async {
-    print('Show camera dialog');
-    
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Open the camera'),
-          content: Text('Do you want to open the camera to record?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('No'),
-              onPressed: () {
-                print('User chose not to open the camera');
-                Navigator.of(context).pop();
-                // If it is not a training task and the user chooses not to open the camera, start timing
-                if (!widget.isTrainingTask) {
-                  _startTimer();
-                }
-              },
-            ),
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () async {
-                print('User chose to open the camera');
-                Navigator.of(context).pop();
-                // If it is not a training task and the user chooses to open the camera, initialize the camera and start timing and recording
-                if (!widget.isTrainingTask) {
-                  await _initializeCamera();
-                  _startTimer();
-                  await _startRecording();
-                } else {
-                  await _initializeCamera();
-                  await _startRecording();
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _stopRecording() async {
@@ -652,16 +609,13 @@ class _CountdownPageState extends State<CountdownPage> {
             SizedBox(height: 8),
             Text('Focusing', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
             SizedBox(height: 32),
-            GestureDetector(
-              onTap: _showCameraDialog,
-              child: Container(
-                width: 300,
-                height: 300,
-                color: Colors.white.withOpacity(0.7),
-                child: _cameraController != null && _cameraController!.value.isInitialized
-                    ? CameraPreview(_cameraController!)
-                    : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.white)),
-              ),
+            Container(
+              width: 300,
+              height: 300,
+              color: Colors.white.withOpacity(0.7),
+              child: _cameraController != null && _cameraController!.value.isInitialized
+                  ? CameraPreview(_cameraController!)
+                  : Center(child: Icon(Icons.camera_alt, size: 48, color: Colors.white)),
             ),
             Spacer(),
             Padding(
