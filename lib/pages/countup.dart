@@ -314,11 +314,6 @@ class _CountupPageState extends State<CountupPage> {
           children: [
             SizedBox(height: 32),
             Text(
-              widget.taskTitle.toUpperCase(),
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Montserrat', color: Colors.white),
-            ),
-            SizedBox(height: 24),
-            Text(
               _formatTime(_elapsedSeconds),
               style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 4),
             ),
