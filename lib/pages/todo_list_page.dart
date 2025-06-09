@@ -637,13 +637,19 @@ class _TodoListPageState extends State<TodoListPage> {
           builder: (BuildContext context) {
             return AlertDialog(
               backgroundColor: Color(0xFFDABFAE),
-              title: Text('Train Your Focus Model'),
-              content: Text('This task is used to train your focus model. Please upload a video of you in a focused state.'),
+              title: Text(
+                'Train Your Focus Model',
+                style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              content: Text(
+                'This task is used to train your focus model. Please upload a video of you in a focused state.',
+                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
               actions: <Widget>[
                 TextButton(
                   child: Text(
                     'No',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -652,7 +658,7 @@ class _TodoListPageState extends State<TodoListPage> {
                 TextButton(
                   child: Text(
                     'Yes',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   onPressed: () {
                     Navigator.of(context).pop();
