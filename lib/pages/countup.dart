@@ -144,18 +144,31 @@ class _CountupPageState extends State<CountupPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Complete Timer'),
-          content: Text('Do you want to count this session in statistics?'),
+          backgroundColor: Color(0xFF788682),
+          title: Text(
+            'Complete Timer',
+            style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Do you want to count this session in statistics?',
+            style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text('No'),
+              child: Text(
+                'No',
+                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 _submitTaskToServerWithGivenUp(true);
               },
             ),
             TextButton(
-              child: Text('Yes'),
+              child: Text(
+                'Yes',
+                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 _submitTaskToServerWithGivenUp(false);
