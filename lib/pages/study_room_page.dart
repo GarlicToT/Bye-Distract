@@ -415,8 +415,15 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                   showDialog(
                                     context: context,
                                     builder: (context) => AlertDialog(
-                                      title: Text('Success', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                      content: Text('Room created successfully! Would you like to enter the room now?', style: TextStyle(fontSize: 14)),
+                                      backgroundColor: Color(0xFF788682),
+                                      title: Text(
+                                        'Success',
+                                        style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                      content: Text(
+                                        'Room created successfully! Would you like to enter the room now?',
+                                        style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
                                       actions: [
                                         TextButton(
                                           onPressed: () async {
@@ -430,14 +437,20 @@ class _StudyRoomPageState extends GeneratorPageState with AutomaticKeepAliveClie
                                               MaterialPageRoute(builder: (context) => StudyRoomDetailPage()),
                                             );
                                           },
-                                          child: Text('Enter Room', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF417D74))), // Changed color
+                                          child: Text(
+                                            'Enter Room',
+                                            style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                                          ),
                                         ),
                                         TextButton(
                                           onPressed: () {
                                             Navigator.of(context).pop();
                                             setState(() {}); // Refresh page
                                           },
-                                          child: Text('Later', style: TextStyle(fontSize: 16, color: Color(0xFF417D74))), // Changed color
+                                          child: Text(
+                                            'Later',
+                                            style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                                          ),
                                         ),
                                       ],
                                     ),
