@@ -296,9 +296,16 @@ class _CountdownPageState extends State<CountdownPage> {
         });
 
         print('Closing camera...');
-        // close camera
-        await _cameraController!.dispose();
-        _cameraController = null;
+        try {
+          // 先停止预览
+          await _cameraController!.pausePreview();
+          // 然后关闭相机
+          await _cameraController!.dispose();
+        } catch (e) {
+          print('Error closing camera: $e');
+        } finally {
+          _cameraController = null;
+        }
         print('Camera closed');
 
         print('Preparing to upload video...');
@@ -347,6 +354,18 @@ class _CountdownPageState extends State<CountdownPage> {
     } else {
       print('Camera status: ${_cameraController != null ? "Initialized" : "Not initialized"}');
       print('Recording status: ${_isRecording ? "Recording" : "Not recording"}');
+      
+      // 如果没有录制视频，也要确保相机被正确关闭
+      if (_cameraController != null) {
+        try {
+          await _cameraController!.pausePreview();
+          await _cameraController!.dispose();
+        } catch (e) {
+          print('Error closing camera: $e');
+        } finally {
+          _cameraController = null;
+        }
+      }
       
       // even if there is no video recording, show the training completed dialog
       if (mounted) {
@@ -686,7 +705,15 @@ class _CountdownPageState extends State<CountdownPage> {
     _timer?.cancel();
     if (_cameraController != null) {
       print('Cleaning camera resources');
-      _cameraController!.dispose();
+      try {
+        if (_isRecording) {
+          _cameraController!.stopVideoRecording();
+        }
+        _cameraController!.pausePreview();
+        _cameraController!.dispose();
+      } catch (e) {
+        print('Error disposing camera: $e');
+      }
       _cameraController = null;
     }
     super.dispose();
