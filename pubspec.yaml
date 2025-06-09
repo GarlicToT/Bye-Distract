@@ -40,4 +40,4 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  image_path: "assets/icon/icon.png"  # 你的图标路径
+  image_path: "assets/icon/icon1.png"  # 你的图标路径
