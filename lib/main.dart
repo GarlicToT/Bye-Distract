@@ -1,36 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'models/task.dart';
 import 'pages/todo_list_page.dart';
 import 'pages/statistics_page.dart';
 import 'pages/study_room_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/login_page.dart';
+import 'pages/generator_page.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'To-do List',
+      title: 'Bye-Distract',
       theme: ThemeData(
-        primaryColor: Color(0xFFAED3EA),
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFFAED3EA),
-          elevation: 0,
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        primarySwatch: Colors.blue,
       ),
-      // home: GeneratorPage(),
-      home: LoginPage(),
+      home: FutureBuilder<bool>(
+        future: _checkLoginStatus(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+          
+          // 如果用户已登录，直接进入主页面
+          if (snapshot.data == true) {
+            return GeneratorPage();
+          }
+          
+          // 否则显示登录页面
+          return LoginPage();
+        },
+      ),
     );
+  }
+
+  Future<bool> _checkLoginStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      final userName = prefs.getString('user_name');
+      
+      // 如果同时存在用户ID和用户名，则认为用户已登录
+      return userId != null && userName != null;
+    } catch (e) {
+      print('Error checking login status: $e');
+      return false;
+    }
   }
 }
 

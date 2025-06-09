@@ -20,6 +20,7 @@ dependencies:
   image_picker: ^1.0.4
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
 
@@ -35,3 +36,8 @@ flutter:
         - asset: assets/fonts/Montserrat-Regular.ttf
         - asset: assets/fonts/Montserrat-Bold.ttf
           weight: 700
+
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/icon.png"  # 你的图标路径

@@ -830,7 +830,112 @@ class _TodoListPageState extends State<TodoListPage> {
     );
   }
 
-  void _showCameraDialogAndStartTask(Task task) {
+  void _showCameraDialogAndStartTask(Task task) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      if (userId == null) {
+        print('User ID not found');
+        return;
+      }
+
+      print('Checking emotion status for user $userId');
+      final url = '${ApiConfig.baseUrl}/tasks/emotion/$userId';
+      print('Request URL: $url');
+      
+      // 检查用户是否已经训练过focus model
+      final response = await http.get(
+        Uri.parse(url),
+      );
+
+      print('Emotion check response status: ${response.statusCode}');
+      print('Emotion check response headers: ${response.headers}');
+      print('Emotion check response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Parsed emotion data: $data');
+        
+        if (data == false) {
+          print('User has not trained focus model yet');
+          // 如果用户还没有训练过，显示提示框
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  backgroundColor: Color(0xFF788682),
+                  title: Text(
+                    'Train Focus Model First',
+                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  content: Text(
+                    'You haven\'t trained your focus model yet. Would you like to train it first?',
+                    style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: Text(
+                        'No',
+                        style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showCameraDialog(task);
+                      },
+                    ),
+                    TextButton(
+                      child: Text(
+                        'Yes',
+                        style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CountdownPage(
+                              taskTitle: 'Train Your Focus Model',
+                              initialSeconds: 5,
+                              taskId: -1,
+                              isTrainingTask: true,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+          return;
+        } else {
+          print('User has already trained focus model');
+          // 如果用户已经训练过，直接显示相机对话框
+          _showCameraDialog(task);
+        }
+      } else {
+        print('Failed to check emotion status: ${response.statusCode}');
+        print('Error response body: ${response.body}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to check training status: ${response.body}')),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error checking emotion status: $e');
+      print('Error stack trace: ${StackTrace.current}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error checking status: $e')),
+        );
+      }
+    }
+  }
+
+  void _showCameraDialog(Task task) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -843,7 +948,7 @@ class _TodoListPageState extends State<TodoListPage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('NO', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+              child: Text('No', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
               onPressed: () async {
                 Navigator.of(context).pop();
                 final shouldRefresh = await Navigator.push(

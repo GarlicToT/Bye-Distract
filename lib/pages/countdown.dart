@@ -308,11 +308,7 @@ class _CountdownPageState extends State<CountdownPage> {
         }
         print('Camera closed');
 
-        print('Preparing to upload video...');
-        // upload video
-        await _uploadTrainingVideo();
-
-        // show the training completed dialog
+        // 先显示完成对话框
         if (mounted) {
           showDialog(
             context: context,
@@ -343,6 +339,10 @@ class _CountdownPageState extends State<CountdownPage> {
             },
           );
         }
+
+        // 在后台上传视频
+        print('Preparing to upload video...');
+        _uploadTrainingVideo();
       } catch (e) {
         print('Error handling training task: $e');
         if (mounted) {
@@ -367,7 +367,7 @@ class _CountdownPageState extends State<CountdownPage> {
         }
       }
       
-      // even if there is no video recording, show the training completed dialog
+      // 显示完成对话框
       if (mounted) {
         showDialog(
           context: context,
@@ -448,10 +448,12 @@ class _CountdownPageState extends State<CountdownPage> {
                   'No',
                   style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-                onPressed: () {
-                  print('User chose not to count in statistics');
+                onPressed: () async {
                   Navigator.of(context).pop();
-                  _submitTaskToServerWithGivenUp(true);
+                  await _submitTaskToServerWithGivenUp(true);
+                  if (mounted) {
+                    Navigator.of(context).pop(true); // 提交完成后再返回TodoList
+                  }
                 },
               ),
               TextButton(
@@ -459,10 +461,12 @@ class _CountdownPageState extends State<CountdownPage> {
                   'Yes',
                   style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-                onPressed: () {
-                  print('User chose to count in statistics');
+                onPressed: () async {
                   Navigator.of(context).pop();
-                  _submitTaskToServerWithGivenUp(false);
+                  await _submitTaskToServerWithGivenUp(false);
+                  if (mounted) {
+                    Navigator.of(context).pop(true); // 提交完成后再返回TodoList
+                  }
                 },
               ),
             ],

@@ -17,6 +17,7 @@ class ApiConfig {
   static String get deleteTaskUrl => '$baseUrl/tasks/del';
   static String get finishTaskUrl => '$baseUrl/tasks/finish';
   static String get modifyTaskUrl => '$baseUrl/tasks/modify';
+  static String checkEmotionUrl(int userId) => '$baseUrl/tasks/emotion/$userId';
   
   // Data-related
   static String get getStatisticsUrl => '$baseUrl/stats';
