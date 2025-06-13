@@ -450,9 +450,25 @@ class _CountdownPageState extends State<CountdownPage> {
                 ),
                 onPressed: () async {
                   Navigator.of(context).pop();
+                  // 先停止录制并释放相机资源
+                  if (_cameraController != null) {
+                    try {
+                      if (_isRecording) {
+                        await _cameraController!.stopVideoRecording();
+                      }
+                      await _cameraController!.pausePreview();
+                      await _cameraController!.dispose();
+                    } catch (e) {
+                      print('Error disposing camera: $e');
+                    } finally {
+                      _cameraController = null;
+                    }
+                  }
+                  // 确保相机资源释放后再提交任务
+                  await Future.delayed(Duration(milliseconds: 500));
                   await _submitTaskToServerWithGivenUp(true);
                   if (mounted) {
-                    Navigator.of(context).pop(true); // 提交完成后再返回TodoList
+                    Navigator.of(context).pop(true); // Back to TodoList after submission
                   }
                 },
               ),
@@ -463,9 +479,25 @@ class _CountdownPageState extends State<CountdownPage> {
                 ),
                 onPressed: () async {
                   Navigator.of(context).pop();
+                  // 先释放相机资源
+                  if (_cameraController != null) {
+                    try {
+                      if (_isRecording) {
+                        await _cameraController!.stopVideoRecording();
+                      }
+                      await _cameraController!.pausePreview();
+                      await _cameraController!.dispose();
+                    } catch (e) {
+                      print('Error disposing camera: $e');
+                    } finally {
+                      _cameraController = null;
+                    }
+                  }
+                  // 确保相机资源释放后再提交任务
+                  await Future.delayed(Duration(milliseconds: 100));
                   await _submitTaskToServerWithGivenUp(false);
                   if (mounted) {
-                    Navigator.of(context).pop(true); // 提交完成后再返回TodoList
+                    Navigator.of(context).pop(true); // Back to TodoList after submission
                   }
                 },
               ),
@@ -607,6 +639,21 @@ class _CountdownPageState extends State<CountdownPage> {
             print('Conditions not met:');
             if (givenUp) print('- User chose not to count in statistics');
             if (widget.isTrainingTask) print('- This is a training task');
+          }
+          
+          // 确保在返回前正确释放相机资源
+          if (_cameraController != null) {
+            try {
+              if (_isRecording) {
+                await _cameraController!.stopVideoRecording();
+              }
+              await _cameraController!.pausePreview();
+              await _cameraController!.dispose();
+            } catch (e) {
+              print('Error disposing camera: $e');
+            } finally {
+              _cameraController = null;
+            }
           }
           
           if (mounted) {
